@@ -164,6 +164,18 @@ class URLAnalysisOutput(BaseModel):
     highest_risk_url: Optional[str] = None
 
 
+class ImageAnalysisVerdict(BaseModel):
+    """Unified verdict for POST /analyze/image."""
+    verdict: ScamVerdict
+    ocr_text: str = ""
+    ocr_engine: str = "none"
+    visual_analysis_app: str = "Unknown"
+    visual_red_flags: list[str] = []
+    confidence_boost: float = 0.0
+    processing_time_ms: float = 0.0
+    image_metadata: dict[str, Any] = {}
+
+
 class ThreatIOCs(BaseModel):
     phone_numbers: list[str] = []
     upi_ids: list[str] = []

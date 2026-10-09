@@ -13,13 +13,15 @@ from __future__ import annotations
 
 import time
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, File, HTTPException, UploadFile
 
 from app.models.schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
+    ImageAnalysisVerdict,
     URLAnalysisOutput,
 )
+from app.services.image_analyzer import analyze_image
 from app.services.scam_analyzer import analyze_text
 from app.services.url_analyzer import analyze_text_for_urls
 
@@ -99,3 +101,20 @@ async def analyze_url_endpoint(
     text = body.url or body.text or ""
     output = analyze_text_for_urls(text)
     return output
+
+
+@router.post("/image", response_model=ImageAnalysisVerdict, status_code=200)
+async def analyze_image_endpoint(
+    file: UploadFile = File(...),
+) -> ImageAnalysisVerdict:
+    """Analyze an uploaded screenshot/image for scam indicators.
+
+    Accepts multipart form-data with a `file` field (png/jpg/jpeg/webp).
+    Runs OCR (local engine first, Gemini Vision fallback) then pipelines
+    the extracted text to the text classifier and URL analyzer.
+
+    When no OCR engine is available, returns a verdict based on image
+    metadata only.
+    """
+    result = analyze_image(file.file)
+    return result

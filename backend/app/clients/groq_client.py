@@ -13,7 +13,8 @@ from app.config import settings
 logger = logging.getLogger("mirage.groq")
 
 DEFAULT_CHAT_MODEL = "llama-3.3-70b-versatile"
-WHISPER_MODEL = "whisper-large-v3"
+WHISPER_MODEL = "whisper-large-v3-turbo"
+WHISPER_MODEL_VERBOSE = "whisper-large-v3-turbo"
 AUDIO_FORMATS = (".ogg", ".mp3", ".wav", ".m4a", ".webm", ".flac")
 
 
@@ -76,19 +77,37 @@ def chat_completion(
     raise last_exc  # pragma: no cover
 
 
-def transcribe_audio(file_path: str, language: Optional[str] = None) -> str:
-    """Transcribe audio via Groq Whisper. Supports ogg/mp3/wav/m4a/webm/flac."""
+def transcribe_audio(
+    file_path: str,
+    language: Optional[str] = None,
+    verbose: bool = False,
+) -> str:
+    """Transcribe audio via Groq Whisper.
+
+    Supports ogg/mp3/wav/m4a/webm/flac. When `verbose=True`, uses
+    response_format='verbose_json' and returns the full text with segments.
+    """
     client = _client()
     start = time.perf_counter()
     with open(file_path, "rb") as f:
-        kwargs: dict[str, Any] = {"file": (file_path, f), "model": WHISPER_MODEL}
+        kwargs: dict[str, Any] = {
+            "file": (file_path, f),
+            "model": WHISPER_MODEL_VERBOSE if verbose else WHISPER_MODEL,
+        }
         if language:
             kwargs["language"] = language
+        if verbose:
+            kwargs["response_format"] = "verbose_json"
+            kwargs["temperature"] = 0.0
         resp = client.audio.transcriptions.create(**kwargs)
     latency_ms = (time.perf_counter() - start) * 1000
     logger.info(
         "groq whisper ok",
-        extra={"model": WHISPER_MODEL, "latency_ms": round(latency_ms, 1)},
+        extra={
+            "model": kwargs["model"],
+            "verbose": verbose,
+            "latency_ms": round(latency_ms, 1),
+        },
     )
     return resp.text
 
