@@ -20,10 +20,12 @@ from app.models.schemas import (
     AnalyzeResponse,
     ImageAnalysisVerdict,
     URLAnalysisOutput,
+    VoiceAnalysisVerdict,
 )
 from app.services.image_analyzer import analyze_image
 from app.services.scam_analyzer import analyze_text
 from app.services.url_analyzer import analyze_text_for_urls
+from app.services.voice_analyzer import analyze_voice
 
 router = APIRouter(tags=["analyze"])
 
@@ -117,4 +119,21 @@ async def analyze_image_endpoint(
     metadata only.
     """
     result = analyze_image(file.file)
+    return result
+
+
+@router.post("/voice", response_model=VoiceAnalysisVerdict, status_code=200)
+async def analyze_voice_endpoint(
+    file: UploadFile = File(...),
+) -> VoiceAnalysisVerdict:
+    """Analyze an uploaded audio file for scam content and synthetic voice.
+
+    Accepts multipart form-data with a `file` field (ogg/mp3/wav/m4a/webm).
+    Transcribes via Groq Whisper, classifies the transcript, and checks
+    for AI-synthesized voice using Resemblyzer.
+
+    When Whisper or Resemblyzer is unavailable, returns a verdict based on
+    whatever signals are present.
+    """
+    result = analyze_voice(file.file)
     return result

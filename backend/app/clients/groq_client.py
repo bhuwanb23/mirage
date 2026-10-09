@@ -112,5 +112,48 @@ def transcribe_audio(
     return resp.text
 
 
+def transcribe_audio_with_segments(
+    file_path: str,
+    language: Optional[str] = None,
+) -> tuple[str, list[dict[str, Any]]]:
+    """Transcribe audio with verbose_json to get segments.
+
+    Returns (full_text, segments) where segments is a list of
+    {"start": float, "end": float, "text": str}.
+    """
+    client = _client()
+    start = time.perf_counter()
+    with open(file_path, "rb") as f:
+        kwargs: dict[str, Any] = {
+            "file": (file_path, f),
+            "model": WHISPER_MODEL_VERBOSE,
+            "response_format": "verbose_json",
+            "temperature": 0.0,
+        }
+        if language:
+            kwargs["language"] = language
+        resp = client.audio.transcriptions.create(**kwargs)
+    latency_ms = (time.perf_counter() - start) * 1000
+    logger.info(
+        "groq whisper verbose ok",
+        extra={
+            "model": WHISPER_MODEL_VERBOSE,
+            "latency_ms": round(latency_ms, 1),
+            "segments": len(resp.segments or []),
+        },
+    )
+    segments: list[dict[str, Any]] = []
+    if resp.segments:
+        for seg in resp.segments:
+            segments.append(
+                {
+                    "start": float(seg.get("start", 0)),
+                    "end": float(seg.get("end", 0)),
+                    "text": seg.get("text", ""),
+                }
+            )
+    return resp.text or "", segments
+
+
 def is_configured() -> bool:
     return bool(settings.groq_api_key)

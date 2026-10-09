@@ -176,6 +176,29 @@ class ImageAnalysisVerdict(BaseModel):
     image_metadata: dict[str, Any] = {}
 
 
+class TranscriptSegment(BaseModel):
+    """A single segment from Whisper transcription."""
+    start: float
+    end: float
+    text: str
+
+
+class VoiceAnalysisVerdict(BaseModel):
+    """Unified verdict for POST /analyze/voice."""
+    verdict: ScamVerdict
+    transcript: str = ""
+    transcript_segments: list[TranscriptSegment] = []
+    detected_language: str = ""
+    synthetic_voice_score: float = 0.0
+    voice_verdict: str = "unknown"
+    audio_duration_seconds: float = 0.0
+    confidence_boost: float = 0.0
+    processing_time_ms: float = 0.0
+    audio_metadata: dict[str, Any] = {}
+    voice_model_available: bool = False
+    whisper_available: bool = False
+
+
 class ThreatIOCs(BaseModel):
     phone_numbers: list[str] = []
     upi_ids: list[str] = []
