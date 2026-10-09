@@ -1,4 +1,12 @@
-"""Mirage Telegram bot entrypoint.
+"""Mirage Telegram bot entrypoint (Phase 2).
+
+Registration order matters — first matching handler wins (spec):
+
+  1. /start  /help  /check  /elder  /family      commands
+  2. photo / image-document                       image handler
+  3. voice / audio                                voice handler
+  4. text & ~command & URL-only                   URL handler
+  5. text & ~command                              text catch-all
 
 Run:  cd bot && uv run python main.py
 """
@@ -9,9 +17,16 @@ import logging
 import os
 import sys
 
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
-from handlers import check, elder, start
+from handlers import check, elder, family, start
 from handlers import help as help_mod
 
 logging.basicConfig(
@@ -48,14 +63,54 @@ def build_app(token: str):
     )
 
 
+def _guarded(handler):
+    """Wrap an async handler so a crash never kills the polling loop."""
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        try:
+            await handler(update, context)
+        except Exception:
+            logger.exception("handler %s crashed", getattr(handler, "__name__", handler))
+    wrapper.__name__ = getattr(handler, "__name__", "handler")
+    return wrapper
+
+
+async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Intercept Elder Mode language picks before normal text analysis."""
+    if await elder.language_choice(update, context):
+        return
+    await check.text_message(update, context)
+
+
 def register(app) -> None:
-    app.add_handler(CommandHandler("start", start.start))
-    app.add_handler(CommandHandler("help", help_mod.help_command))
-    app.add_handler(CommandHandler("check", check.check_command))
-    app.add_handler(CommandHandler("elder", elder.elder))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check.text_message))
-    app.add_handler(MessageHandler(filters.VOICE, check.voice_message))
-    app.add_handler(MessageHandler(filters.PHOTO, check.photo_message))
+    # 1. Commands (explicit, first)
+    app.add_handler(CommandHandler("start", _guarded(start.start)))
+    app.add_handler(CommandHandler("help", _guarded(help_mod.help_command)))
+    app.add_handler(CommandHandler("check", _guarded(check.check_command)))
+    app.add_handler(CommandHandler("elder", _guarded(elder.elder)))
+    app.add_handler(CommandHandler("family", _guarded(family.family)))
+
+    # 2. Media before text (a photo message can carry a caption)
+    app.add_handler(
+        MessageHandler(
+            filters.PHOTO | filters.Document.IMAGE, _guarded(check.photo_message)
+        )
+    )
+    app.add_handler(
+        MessageHandler(filters.VOICE | filters.AUDIO, _guarded(check.voice_message))
+    )
+
+    # 3. URL-bearing text before the catch-all text handler (spec order).
+    #    Only messages Telegram parsed as containing a URL land here; inside,
+    #    url_message() falls through to normal text analysis when the message
+    #    has other content besides the URL (spec 2.4 Step 1).
+    url_text = filters.TEXT & ~filters.COMMAND & filters.Entity("url")
+    app.add_handler(MessageHandler(url_text, _guarded(check.url_message)))
+
+    # 4. General text catch-all — Elder Mode language picks are consumed
+    #    first, then normal text analysis (which also short-circuits
+    #    URL-only input the entity filter may have missed, e.g. bare
+    #    domains like sbi-kyc-verify.xyz).
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, _guarded(text_router)))
 
 
 def main() -> None:

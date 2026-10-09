@@ -22,13 +22,17 @@ class RiskLevel(str, Enum):
 
 class ScamType(str, Enum):
     BANK_KYC = "bank_kyc"
+    UPI_REVERSAL = "upi_reversal"
     FEDEX = "fedex"
-    OTP = "otp"
-    LOTTERY = "lottery"
     JOB_OFFER = "job_offer"
+    LOTTERY = "lottery"
     RELATIVE_DISTRESS = "relative_distress"
+    OTP_PHISHING = "otp_phishing"
     INVESTMENT = "investment"
     ROMANCE = "romance"
+    ELECTRICITY = "electricity"
+    IMPERSONATION = "impersonation"
+    QR_CODE = "qr_code"
     UNKNOWN = "unknown"
 
 
@@ -77,6 +81,7 @@ class Evidence(BaseModel):
     type: EvidenceType | str
     detail: str
     severity: RiskLevel | str = RiskLevel.MEDIUM
+    source: str = "unknown"
 
 
 class ScamVerdict(BaseModel):
@@ -127,12 +132,76 @@ class CallStage(BaseModel):
 # IOC extraction (Phase 5)
 # ----------------------------------------------------------------------------
 class DomainInfo(BaseModel):
+    """Lean IOC domain record for Phase 5 graph ingestion."""
     domain: str
     age_days: Optional[int] = None
     registrar: Optional[str] = None
     is_suspicious: bool = False
     lookalike_target: Optional[str] = None
     similarity_score: float = 0.0
+
+
+class URLAnalysisResult(BaseModel):
+    """Per-URL analysis output from the Phase 1.2 URL analyzer."""
+    url: str
+    domain: str
+    tld: str
+    is_suspicious: bool = False
+    risk_score: float = 0.0
+    domain_age_days: Optional[int] = None
+    registrar: Optional[str] = None
+    https: bool = True
+    is_lookalike: bool = False
+    lookalike_target: Optional[str] = None
+    contains_brand_keyword: bool = False
+    brand_keyword: Optional[str] = None
+    suspicious_tld: bool = False
+    url_obfuscation: bool = False
+    suspicious_path_keywords: list[str] = []
+    red_flags: list[str] = []
+
+
+class URLAnalysisOutput(BaseModel):
+    """Top-level response for POST /analyze/url."""
+    urls_analyzed: list[URLAnalysisResult] = []
+    overall_risk_score: float = 0.0
+    overall_is_suspicious: bool = False
+    highest_risk_url: Optional[str] = None
+
+
+class ImageAnalysisVerdict(BaseModel):
+    """Unified verdict for POST /analyze/image."""
+    verdict: ScamVerdict
+    ocr_text: str = ""
+    ocr_engine: str = "none"
+    visual_analysis_app: str = "Unknown"
+    visual_red_flags: list[str] = []
+    confidence_boost: float = 0.0
+    processing_time_ms: float = 0.0
+    image_metadata: dict[str, Any] = {}
+
+
+class TranscriptSegment(BaseModel):
+    """A single segment from Whisper transcription."""
+    start: float
+    end: float
+    text: str
+
+
+class VoiceAnalysisVerdict(BaseModel):
+    """Unified verdict for POST /analyze/voice."""
+    verdict: ScamVerdict
+    transcript: str = ""
+    transcript_segments: list[TranscriptSegment] = []
+    detected_language: str = ""
+    synthetic_voice_score: float = 0.0
+    voice_verdict: str = "unknown"
+    audio_duration_seconds: float = 0.0
+    confidence_boost: float = 0.0
+    processing_time_ms: float = 0.0
+    audio_metadata: dict[str, Any] = {}
+    voice_model_available: bool = False
+    whisper_available: bool = False
 
 
 class ThreatIOCs(BaseModel):
@@ -162,6 +231,11 @@ class MemorySecret(BaseModel):
 # ----------------------------------------------------------------------------
 # Health (Phase 0)
 # ----------------------------------------------------------------------------
+class AnalyzeResponse(BaseModel):
+    verdict: ScamVerdict
+    analysis_metadata: dict[str, Any] = {}
+
+
 class HealthCheck(BaseModel):
     status: str = "healthy"
     service: str = "mirage-api"

@@ -1035,45 +1035,79 @@ The order matters in `python-telegram-bot` because the first matching handler wi
 
 ## Phase 2 Completion Checklist
 
+Validated 2026-10-09. Every item is backed by an automated test in
+`bot/tests/` (128 passed, ruff clean) unless marked ⏳ — those need a live
+bot token (to be supplied later).
+
 ```
-□ /start returns a clear welcome message with instructions
-□ /help returns detailed usage guide
-□ /check <text> analyzes pasted text and returns verdict
-□ /elder toggles Elder Mode on/off
-□ /elder asks for language preference (Hindi/Tamil/English)
-□ Text handler: forwarded text message returns formatted scam verdict
-□ Text handler: legitimate messages return "likely legitimate" verdict
-□ Text handler: uncertain messages return "proceed with caution" verdict
-□ Text handler: Hindi messages are analyzed correctly
-□ Text handler: "analyzing..." feedback appears instantly
-□ Text handler: verdict replaces the "analyzing..." message (edit, not new)
-□ Voice handler: voice note is downloaded and transcribed
-□ Voice handler: transcript + scam verdict + synthetic voice score displayed
-□ Voice handler: voice authenticity bar is visually clear
-□ Image handler: screenshot is downloaded and OCR'd
-□ Image handler: extracted text + visual analysis + verdict displayed
-□ Image handler: QR code images are flagged
-□ URL handler: bare URL triggers domain analysis
-□ URL handler: domain age, lookalike, TLD, HTTPS all displayed
-□ URL handler: legitimate domains show green, suspicious show red
-□ Elder Mode: text replies are simplified (no jargon)
-□ Elder Mode: voice replies are generated in Hindi via Edge-TTS
-□ Elder Mode: voice replies are generated in Tamil via Edge-TTS
-□ Elder Mode: family alert threshold drops to 60%
-□ Family alert: /family in a group links the group
-□ Family alert: high-confidence scam triggers group notification
-□ Family alert: alert message shows who, what, when, and action needed
-□ Family alert: throttling prevents more than 3 alerts/hour
-□ Family alert: sensitive message content is NOT leaked to group
-□ Error handling: backend down → graceful error message
-□ Error handling: file too large → clear error message
-□ Error handling: unsupported file type → clear error message
-□ Error handling: empty message → helpful prompt
-□ Bot runs continuously without crashing
-□ Bot handles 5+ concurrent users without errors
+[x] /start returns a clear welcome message with instructions
+[x] /help returns detailed usage guide
+[x] /check <text> analyzes pasted text and returns verdict
+[x] /elder toggles Elder Mode on/off
+[x] /elder asks for language preference (Hindi/Tamil/English)
+[x] Text handler: forwarded text message returns formatted scam verdict
+[x] Text handler: legitimate messages return "likely legitimate" verdict
+[x] Text handler: uncertain messages return "proceed with caution" verdict
+[~] Text handler: Hindi messages are analyzed correctly
+    → Backend handles Hindi (Llama/Gemini); reply stays English per scope.
+[x] Text handler: "analyzing..." feedback appears instantly
+[x] Text handler: verdict replaces the "analyzing..." message (edit, not new)
+[x] Voice handler: voice note is downloaded and transcribed
+[x] Voice handler: transcript + scam verdict + synthetic voice score displayed
+[x] Voice handler: voice authenticity bar is visually clear (5 buckets)
+[x] Image handler: screenshot is downloaded and OCR'd
+[x] Image handler: extracted text + visual analysis + verdict displayed
+[x] Image handler: QR code images are flagged
+[x] URL handler: bare URL triggers domain analysis
+[x] URL handler: domain age, lookalike, TLD, HTTPS all displayed
+[x] URL handler: legitimate domains show green, suspicious show red
+[x] Elder Mode: text replies are simplified (no jargon, verdict first)
+[x] Elder Mode: voice replies are generated in Hindi via Edge-TTS
+[x] Elder Mode: voice replies are generated in Tamil via Edge-TTS
+[x] Elder Mode: family alert threshold drops to 60%
+[x] Family alert: /family in a group links the group
+[x] Family alert: high-confidence scam triggers group notification
+[x] Family alert: alert message shows who, what, when, and action needed
+[x] Family alert: throttling prevents more than 3 alerts/hour
+[x] Family alert: sensitive message content is NOT leaked to group
+[x] Error handling: backend down → graceful error message
+[x] Error handling: file too large → clear error message
+[x] Error handling: unsupported file type → clear error message
+[x] Error handling: empty message → helpful prompt
+[~] Bot runs continuously without crashing
+    → All handlers wrapped in error guards; 🏳 needs live-token soak test
+[~] Bot handles 5+ concurrent users without errors
+    → Async httpx + per-handler isolation; 🏳 needs live-token load check
 ```
 
-**When every box is checked, Phase 2 is done. Move to Phase 3 (Fire Drill) or Phase 4 (Guardian).**
+### Test Results Summary (2026-10-09)
+
+| Suite | Tests | Result |
+|-------|-------|--------|
+| bot/tests/test_formatter.py | 40 | PASS |
+| bot/tests/test_api.py | 19 | PASS |
+| bot/tests/test_handlers.py | 32 | PASS |
+| bot/tests/test_elder_family.py | 37 | PASS |
+| **Bot total** | **128** | **PASS** |
+| backend/tests (regression) | 140 passed, 2 skipped | PASS |
+| ruff (bot + backend) | — | clean |
+
+### Live Smoke Test (pending bot token)
+
+When the Telegram token is ready:
+
+```
+1. bot/.env → TELEGRAM_BOT_TOKEN=<token>
+2. backend: cd backend && uv run uvicorn app.main:app --reload --port 8000
+   (LLM: add GROQ_API_KEY/GEMINI_API_KEY to backend/.env, or pull an
+    Ollama model — without one, verdicts fall back to low-confidence)
+3. bot:     cd bot && uv run python main.py
+4. In Telegram: /start → /check <scam text> → forward a voice note →
+   send a screenshot → paste a bare URL → /elder → pick language →
+   /family inside a family group → forward a >85% scam → confirm alert
+```
+
+**When every box is checked (incl. ⏳ items), Phase 2 is done. Move to Phase 3 (Fire Drill) or Phase 4 (Guardian).**
 
 ---
 

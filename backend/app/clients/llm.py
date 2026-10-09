@@ -29,20 +29,20 @@ def _call(provider: str, messages, model, json_mode, temperature, timeout=None) 
 
         return groq_client.chat_completion(
             messages, model=model or groq_client.DEFAULT_CHAT_MODEL,
-            json_mode=json_mode, temperature=temperature,
+            json_mode=json_mode, temperature=temperature, timeout=timeout,
         )
     if provider == "gemini":
         from app.clients import gemini_client
 
         return gemini_client.chat_completion(
             messages, model=model or gemini_client.DEFAULT_MODEL,
-            json_mode=json_mode, temperature=temperature,
+            json_mode=json_mode, temperature=temperature, timeout=timeout,
         )
     if provider == "ollama":
         from app.clients import ollama_client
 
         return ollama_client.chat_completion(
-            messages, model=model, json_mode=json_mode, temperature=temperature,
+            messages, model=model, json_mode=json_mode, temperature=temperature, timeout=timeout,
         )
     raise ValueError(f"unknown LLM provider: {provider}")
 
