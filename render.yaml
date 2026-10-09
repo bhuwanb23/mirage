@@ -1,0 +1,57 @@
+# Render blueprint — Mirage
+# Docs: docs/deploy.md
+# Provisioning this file does NOT run the SQL/Cypher. Do that first (see docs/deploy.md).
+
+services:
+  - type: web
+    name: mirage-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install uv && uv sync --frozen
+    startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: OLLAMA_MODEL
+        value: llama3.2:1b
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USER
+        value: neo4j
+      - key: NEO4J_PASSWORD
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+  - type: web
+    name: mirage-web
+    runtime: static
+    staticPublishPath: frontend/out
+    plan: free
+    buildCommand: cd frontend && npm ci && npm run build && npm run export
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://mirage-api.onrender.com
+
+  - type: worker
+    name: mirage-bot
+    runtime: python
+    rootDir: bot
+    plan: free
+    buildCommand: pip install uv && uv sync --frozen
+    startCommand: uv run python main.py
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: MIRAGE_API_URL
+        value: https://mirage-api.onrender.com

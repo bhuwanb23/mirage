@@ -11,7 +11,8 @@ import sys
 
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
-from handlers import check, elder, help as help_mod, start
+from handlers import check, elder, start
+from handlers import help as help_mod
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
