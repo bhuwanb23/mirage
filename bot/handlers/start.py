@@ -1,4 +1,4 @@
-""" /start — welcome + menu. """
+""" /start — welcome + menu (Phase 2.5 spec text). """
 
 from __future__ import annotations
 
@@ -7,18 +7,30 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 WELCOME = """\
-<b>Mirage — The Scam Vaccine</b>
+<b>🛡️ Welcome to Mirage — Your AI Scam Shield</b>
 
-I simulate a scam against you <i>before</i> a real scammer ever gets to you.
+I protect you from scams by analyzing messages, voice notes, screenshots, and URLs.
 
-<b>Commands</b>
-/check — forward a text/screenshot/voice and I'll analyse it
-/elder — set up a senior's protection profile
-/help — what I can do
+<b>How to use:</b>
+1️⃣ Forward me any suspicious message
+2️⃣ I'll tell you if it's a scam
+3️⃣ I'll explain exactly WHY it's a scam
 
-<b>Quick start</b>
-Forward a suspicious SMS or WhatsApp message straight to this chat.
+<b>What I can check:</b>
+📝 Text messages (WhatsApp, SMS, email)
+🎤 Voice notes and call recordings
+📸 Screenshots of fake websites
+🔗 Suspicious URLs and links
+
+<b>Commands:</b>
+/check &lt;text&gt; — Quick scam check
+/elder — Toggle Elder Mode
+/family — Set up family alerts
+/help — Detailed help
+
+<b>Try it now!</b> Forward me a suspicious message 👇
 """
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(
