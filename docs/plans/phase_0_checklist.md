@@ -27,8 +27,8 @@ Legend: `[ ]` not done · `[x]` done & verified · `[~]` blocked on external acc
 
 ## Databases (0.3)
 
-- [x] `docs/db/001_init_tables.sql` — 6 tables (users, drills, scam_reports, family_groups, family_members, memory_secrets)
-- [x] `docs/db/002_neo4j_constraints.cypher` — uniqueness constraints for all node types
+- [x] `backend/db/001_init_tables.sql` — 6 tables (users, drills, scam_reports, family_groups, family_members, memory_secrets)
+- [x] `backend/db/002_neo4j_constraints.cypher` — uniqueness constraints for all node types
 - [~] Supabase project `mirage` created — **manual: user**
 - [~] SQL executed in Supabase SQL Editor — **manual: user**
 - [~] `SUPABASE_URL` / `SUPABASE_ANON_KEY` in `backend/.env` — **manual: user**
