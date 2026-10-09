@@ -135,5 +135,31 @@ async def analyze_voice_endpoint(
     When Whisper or Resemblyzer is unavailable, returns a verdict based on
     whatever signals are present.
     """
-    result = analyze_voice(file.file)
+    from app.services.voice_validator import validate_and_read_audio
+
+    # UploadFile.read() is async in Starlette. Read bytes first, then pass a
+    # plain bytes object (which the validator handles synchronously) so we keep
+    # the validator synchronous and reusable from the bot layer.
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=422, detail="Audio is empty")
+
+    # Determine extension from the UploadFile's filename (SpooledTemporaryFile
+    # has no filename attribute, so file.file.filename would always be None).
+    from app.services.voice_validator import _guess_suffix_from_filename
+    ext = _guess_suffix_from_filename(file.filename)
+    if ext and ext not in (".ogg", ".mp3", ".wav", ".m4a", ".webm", ".flac"):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported audio format: {ext}. "
+            f"Supported: .ogg, .mp3, .wav, .m4a, .webm, .flac",
+        )
+
+    try:
+        data, mime, duration = validate_and_read_audio(raw)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    import io
+    result = analyze_voice(io.BytesIO(data))
     return result

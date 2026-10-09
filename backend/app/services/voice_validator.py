@@ -36,18 +36,24 @@ _BYTES_PER_SECOND_ESTIMATE = {
 }
 
 
-def validate_and_read_audio(source) -> tuple[bytes, str, float]:
+def validate_and_read_audio(source, strict_extension: bool = False) -> tuple[bytes, str, float]:
     """Read `source` and validate format + size.
 
     Returns (bytes, mime_type, estimated_duration_seconds).
     Raises ValueError on validation failure.
+
+    When `strict_extension=True` and a filename/extension is available, rejects
+    formats not in AUDIO_FORMATS. Otherwise uses byte-signature detection and
+    defaults to .ogg for unrecognized data (Telegram voice notes).
     """
     if isinstance(source, bytes):
         data = source
         suffix = _guess_suffix_from_bytes(data)
+        provided_ext = None
     elif isinstance(source, (str, Path)):
         path = Path(source)
         suffix = path.suffix.lower()
+        provided_ext = suffix
         if suffix not in AUDIO_FORMATS:
             raise ValueError(
                 f"Unsupported audio format: {suffix or 'no extension'}. "
@@ -55,9 +61,20 @@ def validate_and_read_audio(source) -> tuple[bytes, str, float]:
             )
         data = path.read_bytes()
     elif hasattr(source, "read"):
-        # File-like / UploadFile
+        # File-like object / raw file handle — read synchronously.
         data = source.read()
-        suffix = _guess_suffix_from_filename(getattr(source, "filename", ""))
+        # When the source itself carries a filename (e.g. a path-like or a
+        # custom wrapper), use it; otherwise fall back to byte-signature detection.
+        provided_ext = _guess_suffix_from_filename(getattr(source, "filename", None))
+        # Always reject an unsupported extension, regardless of byte content.
+        if provided_ext and provided_ext not in AUDIO_FORMATS:
+            raise ValueError(
+                f"Unsupported audio format: {provided_ext or 'no extension'}. "
+                f"Supported: {', '.join(sorted(AUDIO_FORMATS))}"
+            )
+        # If an extension was provided (and is valid), trust it.
+        # If no extension was provided, fall back to byte-signature detection.
+        suffix = provided_ext if provided_ext else _guess_suffix_from_bytes(data)
     else:
         raise ValueError("Unsupported audio source type")
 
@@ -99,10 +116,16 @@ def _guess_suffix_from_bytes(data: bytes) -> str:
 
 
 def _guess_suffix_from_filename(filename: str | None) -> str:
+    """Return the extension from a filename, or the detected suffix from bytes.
+
+    When the filename has a known audio extension, return it. When it has an
+    unknown extension, return it anyway so the caller can reject it. When there
+    is no filename, return empty string so the caller falls back to byte detection.
+    """
     if not filename:
-        return ".ogg"
+        return ""
     ext = Path(filename).suffix.lower()
-    return ext if ext in AUDIO_FORMATS else ".ogg"
+    return ext if ext else ""
 
 
 def _estimate_duration(data: bytes, suffix: str) -> float:
