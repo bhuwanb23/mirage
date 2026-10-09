@@ -1,0 +1,170 @@
+"""Shared Pydantic contracts — defined once, used by API, bot, and frontend types."""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Optional
+from uuid import UUID, uuid4
+
+from pydantic import BaseModel, Field
+
+
+# ----------------------------------------------------------------------------
+# Enums
+# ----------------------------------------------------------------------------
+class RiskLevel(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class ScamType(str, Enum):
+    BANK_KYC = "bank_kyc"
+    FEDEX = "fedex"
+    OTP = "otp"
+    LOTTERY = "lottery"
+    JOB_OFFER = "job_offer"
+    RELATIVE_DISTRESS = "relative_distress"
+    INVESTMENT = "investment"
+    ROMANCE = "romance"
+    UNKNOWN = "unknown"
+
+
+class InputType(str, Enum):
+    TEXT = "text"
+    AUDIO = "audio"
+    IMAGE = "image"
+    URL = "url"
+
+
+class EvidenceType(str, Enum):
+    URL_ANALYSIS = "url_analysis"
+    DOMAIN_AGE = "domain_age"
+    LINGUISTIC = "linguistic"
+    VOICE_SYNTHETIC = "voice_synthetic"
+    VISUAL = "visual"
+
+
+class ScamStage(str, Enum):
+    NONE = "none"
+    HOOK = "hook"
+    AUTHORITY = "authority"
+    ISOLATION = "isolation"
+    URGENCY = "urgency"
+    PAYMENT = "payment"
+
+
+class AlertLevel(str, Enum):
+    SAFE = "safe"
+    SUSPICIOUS = "suspicious"
+    WARNING = "warning"
+    CRITICAL = "critical"
+
+
+class VerdictSource(str, Enum):
+    WEB = "web"
+    TELEGRAM = "telegram"
+    GUARDIAN = "guardian"
+    DRILL = "drill"
+
+
+# ----------------------------------------------------------------------------
+# Evidence + Verdict (Phase 1 output)
+# ----------------------------------------------------------------------------
+class Evidence(BaseModel):
+    type: EvidenceType | str
+    detail: str
+    severity: RiskLevel | str = RiskLevel.MEDIUM
+
+
+class ScamVerdict(BaseModel):
+    is_scam: bool
+    confidence: float = Field(ge=0.0, le=1.0)
+    scam_type: Optional[str] = None
+    risk_level: RiskLevel | str = RiskLevel.LOW
+    red_flags: list[str] = []
+    evidence: list[Evidence] = []
+    stages_detected: list[str] = []
+    summary: str = ""
+    recommended_action: str = ""
+
+
+# ----------------------------------------------------------------------------
+# Fire Drill (Phase 3)
+# ----------------------------------------------------------------------------
+class DrillResult(BaseModel):
+    drill_id: UUID = Field(default_factory=uuid4)
+    user_id: Optional[UUID] = None
+    scam_type: str
+    script_text: str = ""
+    audio_url: Optional[str] = None
+    user_detected_scam: bool = False
+    detection_time_seconds: int = 0
+    stages_identified: list[str] = []
+    stages_missed: list[str] = []
+    score_before: int = 0
+    score_after: int = 0
+    debrief: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ----------------------------------------------------------------------------
+# Live Guardian (Phase 4)
+# ----------------------------------------------------------------------------
+class CallStage(BaseModel):
+    current_stage: ScamStage | str = ScamStage.NONE
+    stage_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    alert_level: AlertLevel | str = AlertLevel.SAFE
+    alert_message: Optional[str] = None
+    transcript_so_far: str = ""
+    synthetic_voice_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    timestamps: dict[str, str] = {}
+
+
+# ----------------------------------------------------------------------------
+# IOC extraction (Phase 5)
+# ----------------------------------------------------------------------------
+class DomainInfo(BaseModel):
+    domain: str
+    age_days: Optional[int] = None
+    registrar: Optional[str] = None
+    is_suspicious: bool = False
+    lookalike_target: Optional[str] = None
+    similarity_score: float = 0.0
+
+
+class ThreatIOCs(BaseModel):
+    phone_numbers: list[str] = []
+    upi_ids: list[str] = []
+    urls: list[str] = []
+    domains: list[DomainInfo] = []
+    bank_accounts: list[str] = []
+    email_addresses: list[str] = []
+
+
+# ----------------------------------------------------------------------------
+# Requests
+# ----------------------------------------------------------------------------
+class AnalyzeRequest(BaseModel):
+    text: Optional[str] = None
+    url: Optional[str] = None
+    input_type: InputType | str = InputType.TEXT
+
+
+class MemorySecret(BaseModel):
+    question: str
+    answer_hash: str
+    totp_code: Optional[str] = None
+
+
+# ----------------------------------------------------------------------------
+# Health (Phase 0)
+# ----------------------------------------------------------------------------
+class HealthCheck(BaseModel):
+    status: str = "healthy"
+    service: str = "mirage-api"
+    version: str = "0.1.0"
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    providers: dict[str, Any] = {}
