@@ -22,7 +22,11 @@ class JsonFormatter(logging.Formatter):
         if record.exc_info:
             payload["exc"] = self.formatException(record.exc_info)
         # Extra fields attached via `extra={...}` on logger calls
-        for key in ("method", "path", "status", "duration_ms", "model", "tokens_in", "tokens_out", "latency_ms"):
+        extra_keys = (
+            "method", "path", "status", "duration_ms",
+            "model", "tokens_in", "tokens_out", "latency_ms",
+        )
+        for key in extra_keys:
             if hasattr(record, key):
                 payload[key] = getattr(record, key)
         return json.dumps(payload, ensure_ascii=False)
@@ -53,7 +57,10 @@ def log_incoming_request(method: str, path: str, status: int, duration_ms: float
         method,
         path,
         status,
-        extra={"method": method, "path": path, "status": status, "duration_ms": round(duration_ms, 2)},
+        extra={
+            "method": method, "path": path,
+            "status": status, "duration_ms": round(duration_ms, 2),
+        },
     )
 
 

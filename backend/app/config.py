@@ -105,7 +105,10 @@ class Settings(BaseSettings):
                 f"Missing required env vars for production: {', '.join(missing)}"
             )
         if missing:
-            logger.warning("Missing optional env vars (fine in development): %s", ", ".join(missing))
+            logger.warning(
+                "Missing optional env vars (fine in development): %s",
+                ", ".join(missing),
+            )
         logger.info(
             "LLM providers available: %s (provider=%s)",
             ", ".join(self.available_llm_providers) or "none",

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Optional
 
 from app.config import settings
 
@@ -34,7 +33,10 @@ def analyze_image(image_bytes: bytes, prompt: str, mime_type: str = "image/png")
         contents=[prompt, part],
     )
     latency_ms = (time.perf_counter() - start) * 1000
-    logger.info("gemini vision ok", extra={"model": DEFAULT_MODEL, "latency_ms": round(latency_ms, 1)})
+    logger.info(
+        "gemini vision ok",
+        extra={"model": DEFAULT_MODEL, "latency_ms": round(latency_ms, 1)},
+    )
     return resp.text or ""
 
 

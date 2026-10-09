@@ -42,7 +42,7 @@ def _load_model():
 def embed_wav(file_path: str) -> Optional[list[float]]:
     """Compute a 256-d embedding for a wav file. None if unavailable."""
     if not is_available():
-        logger.warning("embed_wav skipped — resemblyzer unavailable: %s", _import_error)
+        logger.warning("embed_wav skipped - resemblyzer unavailable: %s", _import_error)
         return None
     try:
         import numpy as np

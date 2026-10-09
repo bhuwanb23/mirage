@@ -25,8 +25,8 @@ async def lifespan(app: FastAPI):
     settings.validate_startup()
 
     # Soft-init external clients: log failures, never block boot in development.
-    from app.clients.supabase_client import init_supabase
     from app.clients.neo4j_client import init_neo4j
+    from app.clients.supabase_client import init_supabase
 
     app.state.supabase = init_supabase()
     app.state.neo4j = init_neo4j()

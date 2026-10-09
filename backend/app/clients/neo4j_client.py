@@ -15,7 +15,7 @@ def init_neo4j():
     """Create the driver if configured. Returns None otherwise (dev-safe)."""
     global _driver
     if not settings.neo4j_uri:
-        logger.warning("NEO4J_URI not set — Neo4j disabled (development)")
+        logger.warning("NEO4J_URI not set - Neo4j disabled (development)")
         return None
     try:
         from neo4j import GraphDatabase

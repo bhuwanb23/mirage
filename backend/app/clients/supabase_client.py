@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from app.config import settings
 
@@ -16,7 +15,7 @@ def init_supabase():
     """Create the client if configured. Returns None otherwise (dev-safe)."""
     global _client
     if not settings.supabase_url or not settings.supabase_anon_key:
-        logger.warning("SUPABASE_URL/ANON_KEY not set — Supabase disabled (development)")
+        logger.warning("SUPABASE_URL/ANON_KEY not set - Supabase disabled (development)")
         return None
     try:
         from supabase import create_client

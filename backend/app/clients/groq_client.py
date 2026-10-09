@@ -61,7 +61,7 @@ def chat_completion(
             last_exc = exc
             if "429" in str(exc) or "rate" in str(exc).lower():
                 if attempt < max_retries:
-                    logger.warning("Groq 429 — retrying in 2s (attempt %s)", attempt + 1)
+                    logger.warning("Groq 429 - retrying in 2s (attempt %s)", attempt + 1)
                     time.sleep(2)
                     continue
             raise
@@ -78,7 +78,10 @@ def transcribe_audio(file_path: str, language: Optional[str] = None) -> str:
             kwargs["language"] = language
         resp = client.audio.transcriptions.create(**kwargs)
     latency_ms = (time.perf_counter() - start) * 1000
-    logger.info("groq whisper ok", extra={"model": WHISPER_MODEL, "latency_ms": round(latency_ms, 1)})
+    logger.info(
+        "groq whisper ok",
+        extra={"model": WHISPER_MODEL, "latency_ms": round(latency_ms, 1)},
+    )
     return resp.text
 
 

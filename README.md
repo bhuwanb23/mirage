@@ -18,10 +18,10 @@ Mirage simulates a personalized attack against you *before* a real scammer ever 
 ```
 mirage/
 ├── frontend/   # Next.js (App Router) — landing, dashboard, drill, guardian, graph
-├── backend/    # FastAPI — analysis engine, drill, guardian, honeypot
+├── backend/    # FastAPI — analysis engine, drill, guardian, honeypot + DB scripts
 ├── bot/        # Telegram bot
 ├── ml/         # Voice cloning notebook + deepfake detection experiments
-├── docs/       # Idea, plans, DB scripts, API contracts, deploy guide
+├── docs/       # Idea, plans, API contracts, deploy guide
 └── scripts/    # Repo-level utilities
 ```
 
