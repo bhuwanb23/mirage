@@ -15,8 +15,13 @@ import time
 
 from fastapi import APIRouter, Body, HTTPException
 
-from app.models.schemas import AnalyzeRequest, AnalyzeResponse
+from app.models.schemas import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    URLAnalysisOutput,
+)
 from app.services.scam_analyzer import analyze_text
+from app.services.url_analyzer import analyze_text_for_urls
 
 router = APIRouter(tags=["analyze"])
 
@@ -26,10 +31,11 @@ def _metadata(
     processing_ms: float,
     language: str,
     provider_used: str | None,
+    analyzers: list[str],
 ) -> dict:
     return {
         "input_type": input_type,
-        "analyzers_used": ["text_classifier"],
+        "analyzers_used": analyzers,
         "processing_time_ms": round(processing_ms, 1),
         "language_detected": language,
         "provider_used": provider_used,
@@ -50,12 +56,14 @@ async def analyze_text_endpoint(
 
     text = body.text
     if not text or not text.strip():
-        # Defer to the service's empty-text handling for a consistent schema.
         verdict = analyze_text("")
         processing_ms = (time.perf_counter() - t0) * 1000
         return AnalyzeResponse(
             verdict=verdict,
-            analysis_metadata=_metadata("text", processing_ms, body.input_type or "en", None),
+            analysis_metadata=_metadata(
+                "text", processing_ms, body.input_type or "en", None,
+                ["text_classifier"],
+            ),
         )
 
     provider_used: str | None = None
@@ -65,14 +73,29 @@ async def analyze_text_endpoint(
             sender_info=None,
             language=body.input_type or "en",
         )
-        provider_used = None  # populated below if we can detect it
     except Exception as exc:
-        # The service already returns a failure verdict for unreachable providers,
-        # but if it raises we convert to a stable response.
         raise HTTPException(status_code=503, detail=f"Analysis unavailable: {exc}") from exc
 
     processing_ms = (time.perf_counter() - t0) * 1000
     return AnalyzeResponse(
         verdict=verdict,
-        analysis_metadata=_metadata("text", processing_ms, body.input_type or "en", provider_used),
+        analysis_metadata=_metadata(
+            "text", processing_ms, body.input_type or "en",
+            provider_used, ["text_classifier"],
+        ),
     )
+
+
+@router.post("/url", response_model=URLAnalysisOutput, status_code=200)
+async def analyze_url_endpoint(
+    body: AnalyzeRequest = Body(...),
+) -> URLAnalysisOutput:
+    """Extract URLs from text and analyze each domain.
+
+    Accepts plain text / a single URL in the `text` field. When `url` is set,
+    it is analyzed directly. Returns per-URL results plus an overall risk
+    summary.
+    """
+    text = body.url or body.text or ""
+    output = analyze_text_for_urls(text)
+    return output

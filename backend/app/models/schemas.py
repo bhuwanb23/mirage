@@ -127,12 +127,41 @@ class CallStage(BaseModel):
 # IOC extraction (Phase 5)
 # ----------------------------------------------------------------------------
 class DomainInfo(BaseModel):
+    """Lean IOC domain record for Phase 5 graph ingestion."""
     domain: str
     age_days: Optional[int] = None
     registrar: Optional[str] = None
     is_suspicious: bool = False
     lookalike_target: Optional[str] = None
     similarity_score: float = 0.0
+
+
+class URLAnalysisResult(BaseModel):
+    """Per-URL analysis output from the Phase 1.2 URL analyzer."""
+    url: str
+    domain: str
+    tld: str
+    is_suspicious: bool = False
+    risk_score: float = 0.0
+    domain_age_days: Optional[int] = None
+    registrar: Optional[str] = None
+    https: bool = True
+    is_lookalike: bool = False
+    lookalike_target: Optional[str] = None
+    contains_brand_keyword: bool = False
+    brand_keyword: Optional[str] = None
+    suspicious_tld: bool = False
+    url_obfuscation: bool = False
+    suspicious_path_keywords: list[str] = []
+    red_flags: list[str] = []
+
+
+class URLAnalysisOutput(BaseModel):
+    """Top-level response for POST /analyze/url."""
+    urls_analyzed: list[URLAnalysisResult] = []
+    overall_risk_score: float = 0.0
+    overall_is_suspicious: bool = False
+    highest_risk_url: Optional[str] = None
 
 
 class ThreatIOCs(BaseModel):
