@@ -32,6 +32,30 @@ def list_models() -> list[str]:
         return []
 
 
+def resolve_model(requested: str) -> str:
+    """Return `requested` if installed, else the first installed model.
+
+    Ollama answers 404 with an empty body when the model is missing, which is
+    useless to a caller — so we check `/api/tags` first.
+    """
+    installed = list_models()
+    if not installed:
+        raise RuntimeError(
+            "Ollama is running but has no models. Pull one: `ollama pull llama3.2:1b`"
+        )
+    if requested in installed:
+        return requested
+    # allow "llama3.2:1b" matching "llama3.2:1b" or bare-name matches
+    for m in installed:
+        if m.split(":")[0] == requested.split(":")[0]:
+            logger.warning("ollama model %r not installed, using %r", requested, m)
+            return m
+    logger.warning(
+        "ollama model %r not installed, using first available %r", requested, installed[0]
+    )
+    return installed[0]
+
+
 def chat_completion(
     messages: list[dict[str, str]],
     model: str | None = None,
@@ -40,7 +64,7 @@ def chat_completion(
 ) -> str:
     """Chat completion against local Ollama. Same interface as groq_client."""
     payload = {
-        "model": model or settings.ollama_model,
+        "model": resolve_model(model or settings.ollama_model),
         "messages": messages,
         "stream": False,
         "options": {"temperature": temperature},
