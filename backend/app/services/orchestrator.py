@@ -336,9 +336,9 @@ def _route_image(file: UploadFile) -> tuple[dict[str, Any], list[str], str]:
         "text_verdict": result.verdict,
     }
 
-
-
-    return results, analyzers_used, result.detected_language or "en"
+    # ImageAnalysisVerdict has no language field (OCR may mix languages inside
+    # one screenshot); default metadata language to "en".
+    return results, analyzers_used, "en"
 
 
 def _route_audio(file: UploadFile) -> tuple[dict[str, Any], list[str], str]:

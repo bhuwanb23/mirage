@@ -15,7 +15,7 @@ from __future__ import annotations
 import time
 from typing import Any, Optional
 
-from fastapi import APIRouter, Body, File, HTTPException, UploadFile
+from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile
 
 from app.models.schemas import (
     AnalyzeRequest,
@@ -32,21 +32,26 @@ from app.services.voice_analyzer import analyze_voice
 router = APIRouter(tags=["analyze"])
 
 
-@router.post("/analyze")
+@router.post("")  # mounted at prefix=/analyze → POST /analyze
 async def analyze_orchestrator(
-    text: Optional[str] = None,
-    url: Optional[str] = None,
-    file: Optional[UploadFile] = None,
-    input_type: Optional[str] = None,
+    text: Optional[str] = Form(None),
+    url: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    input_type: Optional[str] = Form(None),
 ) -> dict:
-    """Multi-modal orchestrator.
-
-    Accepts multipart/form-data with optional text/url/file fields.
-    Auto-detects input type and routes to appropriate analyzers.
-    """
+    """Multi-modal orchestrator. Accepts multipart/form-data."""
     from app.services.orchestrator import orchestrate
 
     try:
+        # UploadFile.read() is async; orchestrator is sync → read bytes here
+        # and hand it a sync shim exposing .read()/.filename/.content_type.
+        if file is not None:
+            raw = await file.read()
+            file = _SyncUpload(
+                data=raw,
+                filename=file.filename,
+                content_type=file.content_type,
+            )
         response: AnalyzeResponse = orchestrate(
             text=text,
             url=url,
@@ -63,6 +68,18 @@ async def analyze_orchestrator(
             status_code=500,
             detail="Internal error. Please try again",
         ) from exc
+
+
+class _SyncUpload:
+    """Minimal sync stand-in for starlette's UploadFile inside orchestrate()."""
+
+    def __init__(self, data: bytes, filename: Optional[str], content_type: Optional[str]):
+        self._data = data
+        self.filename = filename
+        self.content_type = content_type
+
+    def read(self) -> bytes:
+        return self._data
 
 
 def _metadata(
