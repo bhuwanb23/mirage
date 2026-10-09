@@ -1,6 +1,6 @@
 # Phase 0 Checklist — Living Tracker
 
-Status: 🟡 in progress · Updated as each item is verified.
+Status: 🟢 build complete · all local items verified · remaining `[~]` are external accounts/deploys.
 
 Legend: `[ ]` not done · `[x]` done & verified · `[~]` blocked on external account
 
@@ -45,12 +45,14 @@ Legend: `[ ]` not done · `[x]` done & verified · `[~]` blocked on external acc
 - [x] `clients/tts_client.py` — edge-tts (en/hi/ta voices)
 - [x] `clients/resemblyzer_client.py` — lazy/optional import, graceful skip on py3.13
 - [x] `clients/supabase_client.py` / `clients/neo4j_client.py` — soft-fail in dev
-- [x] Smoke tests in `backend/scripts/` (llm, vision, whisper, tts, ollama, resemblyzer) — each skips cleanly when key missing
+- [x] Smoke tests in `backend/scripts/` (llm, vision, whisper, tts, ollama, resemblyzer, db) — each skips cleanly when key missing
+- [x] `uv run ruff check app scripts` clean
+- [x] Ollama smoke passed — `ollama serve` + `llama3.2:1b` pulled; `smoke_llm.py` + `smoke_ollama.py` PASS
+- [x] Edge-TTS smoke passed (writes `smoke_tts_out.mp3`, 25488 bytes)
+- [x] `clients/ollama_client.py` auto-resolves to an installed model (Ollama returns a bare 404 when the configured model is missing)
 - [~] Groq key obtained + smoke passed — **manual: user** (free at console.groq.com)
 - [~] Gemini key obtained + smoke passed — **manual: user**
-- [~] Ollama smoke passed (needs `ollama serve` + model pulled) — **manual: user**
-- [~] Edge-TTS smoke passed (generates one mp3)
-- [~] Resemblyzer smoke passed — **may skip: py3.13 wheels** (revisit in Phase 1.4)
+- [~] Resemblyzer smoke passed — **blocked: py3.13 has no webrtcvad wheels** (installs on py3.11/3.12 via `uv sync --group voice`)
 - [ ] F5-TTS Colab notebook runs
 
 ## Frontend (0.5)
@@ -60,7 +62,7 @@ Legend: `[ ]` not done · `[x]` done & verified · `[~]` blocked on external acc
 - [x] recharts + framer-motion + lucide-react installed
 - [x] 5 routes render: `/`, `/dashboard`, `/drill`, `/guardian`, `/graph`
 - [x] Navbar with links + Resilience Score badge
-- [x] Dark mode global (`bg-gray-950`)
+- [x] Dark theme global (`dark` class on `<html>` + shadcn dark palette)
 - [x] `lib/api.ts` fetch wrapper + `lib/constants.ts`
 - [x] Dashboard backend-status card calls `GET /health`
 - [x] `npm run lint` passes
@@ -73,7 +75,8 @@ Legend: `[ ]` not done · `[x]` done & verified · `[~]` blocked on external acc
 - [x] `/start` welcome message
 - [x] `/check`, `/elder`, `/help` commands
 - [x] Text / voice / photo handlers acknowledge input (engine wired later)
-- [x] `bot/requirements.txt` + pyproject
+- [x] `bot/pyproject.toml` (uv) + `bot/.env.example`
+- [x] `uv run ruff check .` clean in `bot/` + imports verified
 - [~] Bot replies live to `/start` — **needs TELEGRAM_BOT_TOKEN in bot/.env**
 
 ## ML scaffold
@@ -84,9 +87,26 @@ Legend: `[ ]` not done · `[x]` done & verified · `[~]` blocked on external acc
 
 ## Deploy (0.7)
 
-- [x] `render.yaml` (backend web service)
-- [x] `docs/deploy.md` (Vercel + Render + cold-start notes + post-deploy checklist)
+- [x] `render.yaml` blueprint (api web + web static + bot worker)
+- [x] `docs/deploy.md` (provision order: Supabase → Neo4j → keys → local → Render, + post-deploy checklist)
 - [~] Frontend deployed to Vercel — **manual: user**
 - [~] Backend deployed to Render — **manual: user**
 - [~] Frontend ↔ backend reachable (no CORS errors)
 - [~] Bot ↔ backend reachable
+
+## Verification log (Phase 0 close-out)
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Backend boots | `uv run uvicorn app.main:app --port 8000` | running |
+| Health endpoint | `GET http://localhost:8000/health` | **200** — `{"status":"healthy", ... "configured":"ollama"}` |
+| Backend lint | `cd backend && uv run ruff check app scripts` | **clean** |
+| AI smoke suite | `cd backend && uv run python scripts/smoke_all.py` | **7/7 PASS/SKIP, exit 0** |
+| Frontend lint | `cd frontend && npm run lint` | **clean** |
+| Frontend build | `cd frontend && npm run build` | **pass** — `/`, `/dashboard`, `/drill`, `/guardian`, `/graph` all prerendered |
+| Bot lint | `cd bot && uv run ruff check .` | **clean** |
+| Bot imports | `uv run python -c "import main"` | handlers register: start, help, check, elder, text, voice, photo |
+| Live bot `/start` | `uv run python main.py` | **blocked** — needs `TELEGRAM_BOT_TOKEN` in `bot/.env` |
+
+Not verified by design: Supabase/Neo4j connectivity (`false` in `/health` until
+creds exist), Groq/Gemini (no keys), F5-TTS Colab, any Render/Vercel deploy.
