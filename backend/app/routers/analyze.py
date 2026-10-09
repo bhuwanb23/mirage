@@ -1,17 +1,19 @@
-"""Analyze router — Phase 1.1 text endpoint.
+"""Analyze router — Phase 1.1-1.6.
 
 Endpoints:
-  POST /analyze/text  -> AnalyzeResponse { verdict: ScamVerdict, ... }
+  POST /analyze        -> unified verdict (multi-modal orchestrator)
+  POST /analyze/text   -> AnalyzeResponse { verdict: ScamVerdict, ... }
+  POST /analyze/url    -> URLAnalysisOutput
+  POST /analyze/image  -> ImageAnalysisVerdict
+  POST /analyze/voice  -> VoiceAnalysisVerdict
 
 Run:  uv run uvicorn app.main:app --reload --port 8000
-Test: curl -X POST http://localhost:8000/analyze/text \
-       -H 'Content-Type: application/json' \
-       -d '{"text": "Your SBI account will be blocked in 24 hours..."}'
 """
 
 from __future__ import annotations
 
 import time
+from typing import Any, Optional
 
 from fastapi import APIRouter, Body, File, HTTPException, UploadFile
 
@@ -30,6 +32,39 @@ from app.services.voice_analyzer import analyze_voice
 router = APIRouter(tags=["analyze"])
 
 
+@router.post("/analyze")
+async def analyze_orchestrator(
+    text: Optional[str] = None,
+    url: Optional[str] = None,
+    file: Optional[UploadFile] = None,
+    input_type: Optional[str] = None,
+) -> dict:
+    """Multi-modal orchestrator.
+
+    Accepts multipart/form-data with optional text/url/file fields.
+    Auto-detects input type and routes to appropriate analyzers.
+    """
+    from app.services.orchestrator import orchestrate
+
+    try:
+        response: AnalyzeResponse = orchestrate(
+            text=text,
+            url=url,
+            file=file,
+            input_type=input_type,
+        )
+        return _serialize_response(response)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        import logging
+        logging.error(f"Orchestrator error: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal error. Please try again",
+        ) from exc
+
+
 def _metadata(
     input_type: str,
     processing_ms: float,
@@ -43,6 +78,72 @@ def _metadata(
         "processing_time_ms": round(processing_ms, 1),
         "language_detected": language,
         "provider_used": provider_used,
+    }
+
+
+def _dict_or_model_dump(obj: Any) -> dict:
+    """Convert a Pydantic model or dict to a plain dict."""
+    if hasattr(obj, 'model_dump'):
+        return obj.model_dump()
+    if isinstance(obj, dict):
+        return obj
+    return {k: getattr(obj, k) for k in dir(obj) if not k.startswith('_')}
+
+
+def _serialize_response(response: AnalyzeResponse) -> dict:
+    """Serialize AnalyzeResponse to dict for JSON response."""
+    verdict_dict = _dict_or_model_dump(response.verdict)
+    # Ensure evidence is serialized
+    if 'evidence' in verdict_dict:
+        verdict_dict['evidence'] = [_dict_or_model_dump(ev) for ev in verdict_dict['evidence']]
+    return {
+        'verdict': verdict_dict,
+        'analysis_metadata': response.analysis_metadata,
+    }
+
+
+def _serialize_image_result(result: ImageAnalysisVerdict) -> dict:
+    """Serialize ImageAnalysisVerdict to dict."""
+    return _dict_or_model_dump(result)
+
+
+def _serialize_voice_result(result: VoiceAnalysisVerdict) -> dict:
+    """Serialize VoiceAnalysisVerdict to dict."""
+    return _dict_or_model_dump(result)
+
+
+def _serialize_url_output(output: URLAnalysisOutput) -> dict:
+    """Serialize URLAnalysisOutput to dict."""
+    if hasattr(output, 'model_dump'):
+        return output.model_dump()
+    urls = []
+    for url_result in output.urls_analyzed:
+        if hasattr(url_result, 'model_dump'):
+            urls.append(url_result.model_dump())
+        else:
+            urls.append({
+                'url': url_result.url,
+                'domain': url_result.domain,
+                'tld': url_result.tld,
+                'is_suspicious': url_result.is_suspicious,
+                'risk_score': url_result.risk_score,
+                'domain_age_days': url_result.domain_age_days,
+                'registrar': url_result.registrar,
+                'https': url_result.https,
+                'is_lookalike': url_result.is_lookalike,
+                'lookalike_target': url_result.lookalike_target,
+                'contains_brand_keyword': url_result.contains_brand_keyword,
+                'brand_keyword': url_result.brand_keyword,
+                'suspicious_tld': url_result.suspicious_tld,
+                'url_obfuscation': url_result.url_obfuscation,
+                'suspicious_path_keywords': url_result.suspicious_path_keywords,
+                'red_flags': url_result.red_flags,
+            })
+    return {
+        'urls_analyzed': urls,
+        'overall_risk_score': output.overall_risk_score,
+        'overall_is_suspicious': output.overall_is_suspicious,
+        'highest_risk_url': output.highest_risk_url,
     }
 
 
@@ -137,15 +238,10 @@ async def analyze_voice_endpoint(
     """
     from app.services.voice_validator import validate_and_read_audio
 
-    # UploadFile.read() is async in Starlette. Read bytes first, then pass a
-    # plain bytes object (which the validator handles synchronously) so we keep
-    # the validator synchronous and reusable from the bot layer.
     raw = await file.read()
     if not raw:
         raise HTTPException(status_code=422, detail="Audio is empty")
 
-    # Determine extension from the UploadFile's filename (SpooledTemporaryFile
-    # has no filename attribute, so file.file.filename would always be None).
     from app.services.voice_validator import _guess_suffix_from_filename
     ext = _guess_suffix_from_filename(file.filename)
     if ext and ext not in (".ogg", ".mp3", ".wav", ".m4a", ".webm", ".flac"):
