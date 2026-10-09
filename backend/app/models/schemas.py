@@ -22,13 +22,17 @@ class RiskLevel(str, Enum):
 
 class ScamType(str, Enum):
     BANK_KYC = "bank_kyc"
+    UPI_REVERSAL = "upi_reversal"
     FEDEX = "fedex"
-    OTP = "otp"
-    LOTTERY = "lottery"
     JOB_OFFER = "job_offer"
+    LOTTERY = "lottery"
     RELATIVE_DISTRESS = "relative_distress"
+    OTP_PHISHING = "otp_phishing"
     INVESTMENT = "investment"
     ROMANCE = "romance"
+    ELECTRICITY = "electricity"
+    IMPERSONATION = "impersonation"
+    QR_CODE = "qr_code"
     UNKNOWN = "unknown"
 
 
@@ -77,6 +81,7 @@ class Evidence(BaseModel):
     type: EvidenceType | str
     detail: str
     severity: RiskLevel | str = RiskLevel.MEDIUM
+    source: str = "unknown"
 
 
 class ScamVerdict(BaseModel):
