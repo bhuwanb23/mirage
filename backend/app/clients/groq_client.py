@@ -6,6 +6,8 @@ import logging
 import time
 from typing import Any, Optional
 
+import httpx
+
 from app.config import settings
 
 logger = logging.getLogger("mirage.groq")
@@ -29,6 +31,7 @@ def chat_completion(
     json_mode: bool = False,
     temperature: float = 0.3,
     max_retries: int = 1,
+    timeout: float | None = None,
 ) -> str:
     """Chat completion. Retries once after 2s on 429 rate limit."""
     client = _client()
@@ -39,12 +42,17 @@ def chat_completion(
     }
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
+    _timeout = (
+        httpx.Timeout(timeout, connect=5.0) if timeout else None
+    )
 
     start = time.perf_counter()
     last_exc: Exception | None = None
     for attempt in range(max_retries + 1):
         try:
-            resp = client.chat.completions.create(**kwargs)
+            resp = client.chat.completions.create(
+                **kwargs, timeout=_timeout if _timeout else None
+            )
             latency_ms = (time.perf_counter() - start) * 1000
             usage = getattr(resp, "usage", None)
             logger.info(

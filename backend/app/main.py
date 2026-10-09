@@ -77,7 +77,9 @@ def create_app() -> FastAPI:
         return response
 
     app.include_router(health.router)
-    # Phase 1+: analyze, drill, guardian, honeypot routers register here.
+    from app.routers import analyze
+
+    app.include_router(analyze.router, prefix="/analyze")
 
     return app
 

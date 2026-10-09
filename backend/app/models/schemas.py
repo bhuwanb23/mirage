@@ -162,6 +162,11 @@ class MemorySecret(BaseModel):
 # ----------------------------------------------------------------------------
 # Health (Phase 0)
 # ----------------------------------------------------------------------------
+class AnalyzeResponse(BaseModel):
+    verdict: ScamVerdict
+    analysis_metadata: dict[str, Any] = {}
+
+
 class HealthCheck(BaseModel):
     status: str = "healthy"
     service: str = "mirage-api"

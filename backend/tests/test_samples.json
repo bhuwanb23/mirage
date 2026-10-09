@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "label": "Bank KYC Scam (critical)",
+    "text": "Dear Customer, your SBI account will be BLOCKED within 24 hours due to incomplete KYC. Click here to update immediately: http://sbi-kyc-verify.xyz/update. Enter your account number, ATM PIN, and OTP to verify. SBI Helpline: 9876543210",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.7,
+    "expected_scam_type": "bank_kyc",
+    "expected_risk": "critical"
+  },
+  {
+    "id": 2,
+    "label": "UPI Reversal Scam (high)",
+    "text": "Hi, I accidentally sent ₹15,000 to your UPI ID. Please send it back to my UPI: scammer@ybl immediately. I'm in urgent need. God bless you.",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.6,
+    "expected_scam_type": "upi_reversal",
+    "expected_risk": "high"
+  },
+  {
+    "id": 3,
+    "label": "FedEx Parcel Scam (high)",
+    "text": "FedEx India: Your parcel #FX8834521 is held at customs. A fine of ₹2,499 is pending. Pay now to avoid return: https://fedex-india-customs.top/pay. Track: https://fedex-india-customs.top/track",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.7,
+    "expected_scam_type": "fedex",
+    "expected_risk": "high"
+  },
+  {
+    "id": 4,
+    "label": "Legitimate bank OTP message (low)",
+    "text": "Your OTP for transaction of ₹49,999 is 847293. Do NOT share this with anyone. If you did not initiate this, call 1800-123-4567 immediately.",
+    "expected_is_scam": false,
+    "expected_confidence_max": 0.5,
+    "expected_scam_type": null,
+    "expected_risk": "low"
+  },
+  {
+    "id": 5,
+    "label": "Job Offer Scam (high)",
+    "text": "Congratulations! You've been selected for a work-from-home position at Amazon India. Earn ₹5,000-₹15,000 daily by liking YouTube videos. No experience needed. WhatsApp us at +91-98765-43210 to start. Registration fee: ₹999 (refundable).",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.6,
+    "expected_scam_type": "job_offer",
+    "expected_risk": "high"
+  },
+  {
+    "id": 6,
+    "label": "Lottery Scam (critical)",
+    "text": "CONGRATULATIONS!!! Your mobile number has won ₹25,00,000 in the Kaun Banega Crorepati Lucky Draw 2024! To claim your prize, send your bank details and pay ₹5,000 processing fee to UPI: kbc-prize@paytm. Contact: 9876543210. Offer valid 48 hours only!",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.7,
+    "expected_scam_type": "lottery",
+    "expected_risk": "critical"
+  },
+  {
+    "id": 7,
+    "label": "Relative in Distress (high)",
+    "text": "Mom, I'm in trouble. I met with an accident near the airport. I need ₹50,000 for hospital admission immediately. Please send to this UPI: emergency.help@ybl. Don't tell Dad, he'll panic. I'll call you later, my phone is about to die.",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.6,
+    "expected_scam_type": "relative_distress",
+    "expected_risk": "high"
+  },
+  {
+    "id": 8,
+    "label": "Legitimate bank transaction alert (low)",
+    "text": "SBI: A/c XX1234 debited with Rs 1,250.00 on 15/01/25 at AMAZON PAY. Avl Bal: Rs 45,678.90. Not you? Call 1800-11-2211 or SMS BLOCK to 567676.",
+    "expected_is_scam": false,
+    "expected_confidence_max": 0.4,
+    "expected_scam_type": null,
+    "expected_risk": "low"
+  },
+  {
+    "id": 9,
+    "label": "Electricity Bill Scam (high)",
+    "text": "URGENT: Your electricity connection (Consumer No: 456789123) will be DISCONNECTED tonight at 9 PM due to unpaid bill of ₹3,847. Pay immediately to avoid disconnection: https://mseb-payment-portal.xyz/pay. Reference: EB2024-8834.",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.6,
+    "expected_scam_type": "electricity",
+    "expected_risk": "high"
+  },
+  {
+    "id": 10,
+    "label": "RBI Impersonation (critical)",
+    "text": "This is a message from the Reserve Bank of India. Your PAN card is linked to illegal transactions totaling ₹45,00,000. A case has been filed against you under Section 420 IPC. Contact CBI Officer Rajesh Kumar on WhatsApp +91-98765-43210 within 2 hours to avoid arrest. Do not inform anyone as this is a confidential investigation.",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.7,
+    "expected_scam_type": "impersonation",
+    "expected_risk": "critical"
+  },
+  {
+    "id": 11,
+    "label": "QR Code Scam (high)",
+    "text": "You have received a payment of ₹10,000 from Flipkart Seller Program! To accept this payment, scan the QR code below using your UPI app and enter your PIN to confirm receipt.",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.6,
+    "expected_scam_type": "qr_code",
+    "expected_risk": "high"
+  },
+  {
+    "id": 12,
+    "label": "Investment Scam (high)",
+    "text": "🚀 Join India's #1 Trading Group! Turn ₹10,000 into ₹1,00,000 in just 7 days with our AI-powered stock tips. 5000+ members earning daily. Join our Telegram group: t.me/surefire-trading-india. Limited seats! Message now: +91-87654-32100",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.6,
+    "expected_scam_type": "investment",
+    "expected_risk": "high"
+  },
+  {
+    "id": 13,
+    "label": "Romance Scam (medium)",
+    "text": "Hello dear, I am Priya from Mumbai. I saw your profile and felt a connection. I am a doctor working in the army and currently posted in Kashmir. I would love to chat with you. Can we move to WhatsApp? My number is +91-99887-76655. I am looking for a genuine life partner.",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.4,
+    "expected_scam_type": "romance",
+    "expected_risk": "medium"
+  },
+  {
+    "id": 14,
+    "label": "Legitimate OTP warning (low)",
+    "text": "HDFC Bank: OTP 456789 for Rs 5,000 txn. Valid for 5 mins. NEVER share OTP with anyone. HDFC Bank will NEVER call you to ask for OTP. If not you, call 1800-202-6161.",
+    "expected_is_scam": false,
+    "expected_confidence_max": 0.4,
+    "expected_scam_type": null,
+    "expected_risk": "low"
+  },
+  {
+    "id": 15,
+    "label": "KYC Reminder legitimate (low)",
+    "text": "Dear Customer, your KYC is due for renewal. Please visit your nearest SBI branch with your Aadhaar and PAN card. This is a mandatory RBI guideline. Ignore if already done. - State Bank of India",
+    "expected_is_scam": false,
+    "expected_confidence_max": 0.4,
+    "expected_scam_type": null,
+    "expected_risk": "low"
+  },
+  {
+    "id": 16,
+    "label": "Fake Police (critical)",
+    "text": "THIS IS DELHI POLICE CYBER CELL. Your Aadhaar number 1234-5678-9012 has been used to open a fraudulent bank account. You are required to appear at the Cyber Cell office tomorrow at 10 AM. For online verification, download the app from: https://delhi-police-verification.xyz/app. Case No: CYB/2024/8834.",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.7,
+    "expected_scam_type": "impersonation",
+    "expected_risk": "critical"
+  },
+  {
+    "id": 17,
+    "label": "Legitimate delivery update (low)",
+    "text": "Your Amazon.in order #402-1234567-8901234 has been shipped via BlueDart. Tracking ID: 8834567890. Expected delivery: 17 Jan. Track at: https://www.bluedart.com/tracking",
+    "expected_is_scam": false,
+    "expected_confidence_max": 0.4,
+    "expected_scam_type": null,
+    "expected_risk": "low"
+  },
+  {
+    "id": 18,
+    "label": "Loan Scam (high)",
+    "text": "Pre-approved Personal Loan of ₹5,00,000 at 8.5% interest! No CIBIL check required. Instant disbursement. Processing fee: ₹2,500 only. Send your Aadhaar photo and bank details to WhatsApp +91-76543-21098. Offer expires today!",
+    "expected_is_scam": true,
+    "expected_confidence_min": 0.6,
+    "expected_scam_type": "unknown",
+    "expected_risk": "high"
+  },
+  {
+    "id": 19,
+    "label": "Legitimate UPI confirmation (low)",
+    "text": "₹500 sent to Ramesh Kumar (ramesh@okicici) via UPI. Ref: 4567890123. Date: 15/01/25 14:30.",
+    "expected_is_scam": false,
+    "expected_confidence_max": 0.4,
+    "expected_scam_type": null,
+    "expected_risk": "low"
+  },
+  {
+    "id": 20,
+    "label": "SIM Swap Warning legitimate (low)",
+    "text": "Dear Customer, a SIM swap request has been initiated for your mobile number 98765XXXXX. If you did not request this, immediately call your telecom operator. Do NOT share any OTP received on your phone.",
+    "expected_is_scam": false,
+    "expected_confidence_max": 0.5,
+    "expected_scam_type": null,
+    "expected_risk": "low"
+  }
+]

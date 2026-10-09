@@ -61,6 +61,7 @@ def chat_completion(
     model: str | None = None,
     json_mode: bool = False,
     temperature: float = 0.3,
+    timeout: float | None = None,
 ) -> str:
     """Chat completion against local Ollama. Same interface as groq_client."""
     payload = {
@@ -69,11 +70,15 @@ def chat_completion(
         "stream": False,
         "options": {"temperature": temperature},
     }
+    _timeout = httpx.Timeout(timeout, connect=5.0) if timeout else None
     if json_mode:
         payload["format"] = "json"
 
     start = time.perf_counter()
-    resp = httpx.post(f"{settings.ollama_base_url}/api/chat", json=payload, timeout=TIMEOUT)
+    resp = httpx.post(
+        f"{settings.ollama_base_url}/api/chat", json=payload,
+        timeout=_timeout if _timeout else TIMEOUT,
+    )
     resp.raise_for_status()
     latency_ms = (time.perf_counter() - start) * 1000
     data = resp.json()

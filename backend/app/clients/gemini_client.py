@@ -45,6 +45,7 @@ def chat_completion(
     model: str = DEFAULT_MODEL,
     json_mode: bool = False,
     temperature: float = 0.3,
+    timeout: float | None = None,
 ) -> str:
     """Chat completion with the same interface as groq_client.chat_completion."""
     client = _client()
