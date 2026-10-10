@@ -1,0 +1,19 @@
+%%{init: {"theme": "base", "themeVariables": {"background": "#0a0a0a", "primaryColor": "#171717", "primaryTextColor": "#fafafa", "primaryBorderColor": "#34d399", "lineColor": "#52525b", "secondaryColor": "#171717", "tertiaryColor": "#0a0a0a", "fontFamily": "ui-sans-serif, system-ui", "fontSize": "14px"}} }%%
+flowchart LR
+    A["🪤 Honeypot<br/>scripted persona"] -->|"eats the bait"| B["Scammer<br/>conversation"]
+    B --> C["IOC extractor<br/>phones · UPI · domains"]
+    C --> D["Evidence builder<br/>transcript + timestamps"]
+    D --> E[("Neo4j Scam Graph")]
+    E --> F["🗺️ Weather map<br/>clusters · rings · heatmap"]
+    E --> G["📄 Report<br/>structured + shareable"]
+    C -.->|"IOC nodes"| E
+
+    classDef trap fill:#27272a,stroke:#f59e0b,color:#fafafa
+    classDef extract fill:#171717,stroke:#34d399,color:#fafafa
+    classDef store fill:#1c1917,stroke:#a1a1aa,color:#fafafa
+    classDef out fill:#052e16,stroke:#34d399,color:#fafafa
+
+    class A,B trap
+    class C,D extract
+    class E store
+    class F,G out

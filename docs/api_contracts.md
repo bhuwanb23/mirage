@@ -126,24 +126,80 @@ then returns the `/analyze/text` shape.
 
 ---
 
-## Scam graph (Phase 5)
+## Scammer Hunter + Scam graph (Phase 5) ✅ implemented
 
-### 📋 `GET /graph/stats`
-
-```jsonc
-{ "phones": 1240, "upi_ids": 812, "domains": 96, "campaigns": 31 }
-```
-
-### 📋 `GET /graph/campaigns`
+### ✅ `POST /honeypot/start` / `POST /honeypot/continue`
 
 ```jsonc
+// req  { "scammer_message": "…", "persona": "ramesh", "mode": "live|simulate" }
+// cont { "session_id": "hp-…", "scammer_message": "…" }
 // 200
-[{ "name": "Fake FedEx parcel", "nodes": 412, "active": true, "last_seen": "…Z" }]
+{
+  "session_id": "hp-0a1b2c3d4e5f",
+  "reply": "Okay beta, I'm writing it down. S-B-I dash safe at Y-B-L?…",
+  "tactic_used": "mishearing",          // mishearing|tangent|confusion|app_failure|repetition|compliance
+  "iocs_extracted_this_turn": { "phone_numbers": ["9876543211"], "upi_ids": ["sbi-safe@ybl"] },
+  "total_iocs_extracted": 2,
+  "conversation_health": "engaged",     // engaged|frustrated|about_to_hang_up
+  "messages_in_session": 4,
+  "estimated_time_wasted_seconds": 45,
+  "mode": "simulate"
+}
 ```
 
-### 📋 `GET /iocs/{type}/{value}`
+`mode="simulate"` skips the LLM (deterministic persona) — used by the scripted
+demo and tests. `mode="live"` uses Groq→Gemini→Ollama with rule fallback.
 
-`type` ∈ `phone | upi | domain | ip`. Returns the node plus its campaign links.
+### ✅ `GET /honeypot/session/{session_id}`
+
+Full conversation log + accumulated `ThreatIOCs` + total time wasted.
+
+### ✅ `GET /honeypot/scripted`
+
+Pre-written demo exchange (plan §5.1 Option A) + `ioc_highlights` map the UI
+renders as highlighted chips.
+
+### ✅ `GET /graph/data?limit=200`
+
+```jsonc
+// 200 — force-directed payload (plan §5.4)
+{
+  "nodes": [{ "id": "phone:9876543210", "label": "98765-43210", "type": "PhoneNumber",
+              "group": 1, "report_count": 3, "in_ring": true, "properties": {} }],
+  "edges": [{ "source": "phone:9876543210", "target": "upi:sbi-safe@ybl", "type": "USES_UPI" }],
+  "truncated": false
+}
+```
+
+### ✅ `GET /graph/stats`
+
+```jsonc
+{ "phone_numbers": 8, "upi_ids": 3, "domains": 2, "bank_accounts": 2,
+  "scam_reports": 8, "rings": 3, "scam_type_counts": { "bank_kyc": 4 },
+  "backend": "sqlite" }   // "neo4j" when NEO4J_URI is configured
+```
+
+### ✅ `GET /graph/rings?min_size=3`
+
+Plan §5.3 queries 1–3: connected-component rings + UPIs/domains shared by
+multiple phone numbers.
+
+### ✅ `GET /map/heatmap`
+
+Plan §5.5 city dataset (`Delhi` 47 / Bank KYC / 0.9 …) + `national_stats`
+enriched with live report + ring counts.
+
+### ✅ `POST /report/generate`
+
+```jsonc
+// req  { "user_name": "Priya Sharma", "scam_type": "bank_kyc", "amount_lost": 0,
+//        "honeypot_session_id": "hp-…"?, "iocs": {…}?, "anonymous": false }
+// 200  { "report_id": "RPT-2026-1010-12345", "report_text": "CYBER CRIME COMPLAINT\n…",
+//        "helpline_script": "📞 1930 HELPLINE SCRIPT\n…", "urgent": false }
+```
+
+Passing `honeypot_session_id` prefills IOCs from that session. LLM narrative
+with deterministic template fallback.
 
 ---
 
