@@ -118,7 +118,7 @@ class TestSessionEndpoint:
         _turn(client, "okay done", session_id=sid)
         body = client.get(f"/honeypot/session/{sid}").json()
         assert body["session_id"] == sid
-        assert [m["role"] for m in body["messages"]] == ["scammer", "ramesh"]
+        assert [m["role"] for m in body["messages"]] == ["scammer", "ramesh", "scammer", "ramesh"]
         assert body["iocs"]["upi_ids"][0]["value"] == "sbi-safe@ybl"
         assert body["total_time_wasted_seconds"] > 0
 

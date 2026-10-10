@@ -121,17 +121,26 @@ class SQLiteGraphStore:
 
     # -- primitives --------------------------------------------------------
 
-    def merge_node(self, node_type: str, key: str, props: dict[str, Any] | None = None) -> str:
-        """MERGE a node: create with props, else update props (report_count handled by callers)."""
+    def merge_node(
+        self,
+        node_type: str,
+        key: str,
+        props: dict[str, Any] | None = None,
+        *,
+        on_create: dict[str, Any] | None = None,
+    ) -> str:
+        """MERGE a node: `on_create` props apply only on creation (counters,
+        first_seen), `props` apply on create AND match (safe updates)."""
         nid = node_id(node_type, key)
         with self._lock, self._conn:
             row = self._conn.execute(
                 "SELECT props FROM nodes WHERE type = ? AND key = ?", (node_type, key)
             ).fetchone()
             if row is None:
+                create = {**(on_create or {}), **(props or {})}
                 self._conn.execute(
                     "INSERT INTO nodes (id, type, key, props) VALUES (?, ?, ?, ?)",
-                    (nid, node_type, key, json.dumps(props or {})),
+                    (nid, node_type, key, json.dumps(create)),
                 )
             elif props:
                 merged = {**json.loads(row["props"]), **props}
@@ -204,13 +213,12 @@ class SQLiteGraphStore:
             nid = self.merge_node(
                 "PhoneNumber",
                 item.value,
-                {
+                {"last_seen": today, "context": item.context},
+                on_create={
                     "country_code": "+91",
                     "first_seen": today,
-                    "last_seen": today,
                     "report_count": 0,
                     "is_verified_scammer": False,
-                    "context": item.context,
                 },
             )
             self._bump_report_count("PhoneNumber", item.value, today)
@@ -227,7 +235,8 @@ class SQLiteGraphStore:
             nid = self.merge_node(
                 "UPI_ID",
                 item.value,
-                {"handle": handle, "bank": bank, "first_seen": today, "report_count": 0},
+                {"last_seen": today},
+                on_create={"handle": handle, "bank": bank, "first_seen": today, "report_count": 0},
             )
             self._bump_report_count("UPI_ID", item.value, today)
             upi_ids.append(nid)
@@ -240,7 +249,8 @@ class SQLiteGraphStore:
             nid = self.merge_node(
                 "Domain",
                 item.value,
-                {"tld": tld, "first_seen": today, "is_suspicious": True, "context": item.context},
+                {},
+                on_create={"tld": tld, "first_seen": today, "is_suspicious": True, "context": item.context},
             )
             domain_ids.append(nid)
             if self.merge_edge(report_nid, "INVOLVES_DOMAIN", nid, {"context": item.context}):
@@ -251,14 +261,17 @@ class SQLiteGraphStore:
             nid = self.merge_node(
                 "BankAccount",
                 item.value,
-                {"bank_name": "", "first_seen": today, "report_count": 0},
+                {},
+                on_create={"bank_name": "", "first_seen": today, "report_count": 0},
             )
             self._bump_report_count("BankAccount", item.value, today)
             account_ids.append(nid)
 
         name_ids = []
         for name in iocs.scammer_names:
-            nid = self.merge_node("ScammerName", name, {"aliases": [], "first_seen": today})
+            nid = self.merge_node(
+                "ScammerName", name, {}, on_create={"aliases": [], "first_seen": today}
+            )
             name_ids.append(nid)
             if self.merge_edge(report_nid, "INVOLVES_NAME", nid, {}):
                 created["edges"] += 1
@@ -763,7 +776,15 @@ class Neo4jGraphStore:
             backend="neo4j",
         )
 
-    def merge_node(self, node_type: str, key: str, props: dict[str, Any] | None = None) -> str:
+    def merge_node(
+        self,
+        node_type: str,
+        key: str,
+        props: dict[str, Any] | None = None,
+        *,
+        on_create: dict[str, Any] | None = None,
+    ) -> str:
+        # Neo4j MERGE + ON CREATE SET handles create-only semantics in Cypher.
         self._q(
             f"MERGE (n:{node_type} {{`{NODE_KEY_PROP[node_type]}`: $key}}) SET n += $props",
             {"key": key, "props": props or {}},

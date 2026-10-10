@@ -11,9 +11,9 @@ from app.services import ioc_extractor
 
 MESSAGE = (
     "Good afternoon, this is Officer Rajesh from SBI. Your KYC is incomplete. "
-    "Transfer ₹50,000 to sbi-safe@ybl immediately, or call me on 98765 43210. "
+    "Transfer ₹50,000 to sbi-safe@ybl immediately, or call me on 98765 43211. "
     "Also WhatsApp me on +91-87654-32109. Open https://sbi-kyc-verify.xyz/update "
-    "and give account number 1234567890123 with IFSC SBIN0001234. "
+    "and give account number 555666777888 with IFSC SBIN0001234. "
     "Your case reference is KYC-2025-8834. My colleague Ramesh will help."
 )
 
@@ -22,7 +22,7 @@ class TestRegexExtraction:
     def test_phone_numbers(self):
         iocs = ioc_extractor.extract_iocs(MESSAGE)
         phones = [i.value for i in iocs.phone_numbers]
-        assert "9876543210" in phones
+        assert "9876543211" in phones
         assert "8765432109" in phones  # +91-87654-32109 normalized
 
     def test_upi_ids(self):
@@ -39,7 +39,7 @@ class TestRegexExtraction:
 
     def test_bank_account_requires_keyword_context(self):
         iocs = ioc_extractor.extract_iocs(MESSAGE)
-        assert "1234567890123" in [a.value for a in iocs.bank_accounts]
+        assert "555666777888" in [a.value for a in iocs.bank_accounts]
         # A bare 12-digit number with no account keyword must NOT match.
         bare = ioc_extractor.extract_iocs("My pin is 998877665544 ok")
         assert bare.bank_accounts == []
@@ -64,7 +64,7 @@ class TestRegexExtraction:
         assert "admin@example.com" not in upis
 
     def test_deduplication(self):
-        text = "call 9876543210 or 9876543210 again, pay to sbi-safe@ybl and sbi-safe@ybl"
+        text = "call 9876543211 or 9876543211 again, pay to sbi-safe@ybl and sbi-safe@ybl"
         iocs = ioc_extractor.extract_iocs(text)
         assert len(iocs.phone_numbers) == 1
         assert len(iocs.upi_ids) == 1

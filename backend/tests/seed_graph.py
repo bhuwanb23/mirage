@@ -70,10 +70,10 @@ def seed(store) -> dict:
         store.merge_node(
             "PhoneNumber",
             phone,
-            {
+            {"last_seen": ts},
+            on_create={
                 "country_code": "+91",
                 "first_seen": ts,
-                "last_seen": ts,
                 "report_count": 0,
                 "is_verified_scammer": False,
             },
@@ -81,20 +81,27 @@ def seed(store) -> dict:
     for upi in UPIS:
         handle, _, bank = upi.partition("@")
         store.merge_node(
-            "UPI_ID", upi, {"handle": handle, "bank": bank, "first_seen": ts, "report_count": 0}
+            "UPI_ID",
+            upi,
+            {},
+            on_create={"handle": handle, "bank": bank, "first_seen": ts, "report_count": 0},
         )
     for domain in DOMAINS:
         store.merge_node(
             "Domain",
             domain,
-            {"tld": domain.rsplit(".", 1)[-1], "first_seen": ts, "is_suspicious": True},
+            {},
+            on_create={"tld": domain.rsplit(".", 1)[-1], "first_seen": ts, "is_suspicious": True},
         )
     for account, bank in ACCOUNTS.items():
         store.merge_node(
-            "BankAccount", account, {"bank_name": bank, "first_seen": ts, "report_count": 0}
+            "BankAccount",
+            account,
+            {},
+            on_create={"bank_name": bank, "first_seen": ts, "report_count": 0},
         )
     for name, phones in SCAMMER_NAMES.items():
-        store.merge_node("ScammerName", name, {"aliases": [], "first_seen": ts})
+        store.merge_node("ScammerName", name, {}, on_create={"aliases": [], "first_seen": ts})
         for phone in phones:
             store.merge_edge(node_id("ScammerName", name), "OWNS", node_id("PhoneNumber", phone), {"confidence": 0.8})
 

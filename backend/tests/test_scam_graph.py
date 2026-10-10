@@ -195,7 +195,7 @@ def test_seed_script_builds_demo_ring(tmp_path):
         assert stats.upi_ids == 3
         assert stats.domains == 2
         assert stats.bank_accounts == 2
-        assert stats.scam_reports == 6
+        assert stats.scam_reports == 8
         assert stats.rings >= 1
 
         shared = store.shared_infrastructure()
