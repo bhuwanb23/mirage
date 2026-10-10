@@ -1,0 +1,49 @@
+%%{init: {"theme": "base", "themeVariables": {"background": "#0a0a0a", "primaryColor": "#171717", "primaryTextColor": "#fafafa", "primaryBorderColor": "#34d399", "lineColor": "#52525b", "secondaryColor": "#171717", "tertiaryColor": "#0a0a0a", "fontFamily": "ui-sans-serif, system-ui", "fontSize": "14px"}} }%%
+flowchart TB
+    subgraph clients["Clients"]
+        WEB["🌐 Next.js Web<br/>landing · drill · guardian · graph · dashboard"]
+        TG["📱 Telegram Bot<br/>forward a text, voice note, or screenshot"]
+    end
+
+    subgraph backend["FastAPI Backend"]
+        AN["analyze/*<br/>text · url · image · voice"]
+        GU["WS /guardian/stream<br/>stage tracker + alerts"]
+        HO["honeypot/*<br/>scripted scam conversations"]
+        ME["memory/*<br/>handshake questions + TOTP"]
+        GR["graph/*<br/>stats · rings · heatmap · report"]
+    end
+
+    subgraph data["Data & Intelligence"]
+        SB[("Supabase<br/>users · scores · evidence")]
+        NEO[("Neo4j Aura<br/>scam graph")]
+        LLM["LLM providers<br/>Groq · Gemini · Ollama"]
+        TTS["edge-tts<br/>scammer voice"]
+    end
+
+    WEB -->|REST + WS| AN
+    WEB -->|REST + WS| GU
+    WEB -->|REST| GR
+    TG -->|REST| AN
+    TG -->|REST| HO
+
+    AN --> LLM
+    AN --> SB
+    GU --> LLM
+    GU --> ME
+    GU --> SB
+    HO --> LLM
+    HO --> TTS
+    HO --> AN
+    ME --> SB
+    GR --> NEO
+    HO -->|IOCs| NEO
+
+    classDef web fill:#052e16,stroke:#34d399,color:#fafafa
+    classDef api fill:#171717,stroke:#34d399,color:#fafafa
+    classDef data fill:#1c1917,stroke:#a1a1aa,color:#fafafa
+    classDef llm fill:#27272a,stroke:#f59e0b,color:#fafafa
+
+    class WEB,TG web
+    class AN,GU,HO,ME,GR api
+    class SB,NEO data
+    class LLM,TTS llm

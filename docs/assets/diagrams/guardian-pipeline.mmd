@@ -1,0 +1,25 @@
+%%{init: {"theme": "base", "themeVariables": {"background": "#0a0a0a", "primaryColor": "#171717", "primaryTextColor": "#fafafa", "primaryBorderColor": "#34d399", "lineColor": "#52525b", "secondaryColor": "#171717", "tertiaryColor": "#0a0a0a", "fontFamily": "ui-sans-serif, system-ui", "fontSize": "14px"}} }%%
+flowchart LR
+    A["🎤 Live call audio"] --> B["Transcription<br/>Whisper / stream"]
+    B --> C{"Stage tracker"}
+    C -->|"1 · Hook"| D["benign"]
+    C -->|"2 · Authority"| D
+    C -->|"3 · Isolation"| D
+    C -->|"4 · Urgency"| E["⚠️ alert raised"]
+    C -->|"5 · Payment"| F["🚫 blocked<br/>transfer stopped"]
+    E --> G{"Memory Handshake"}
+    G -->|"family answers<br/>only they know"| H["✅ verified<br/>call continues"]
+    G -->|"wrong / timeout"| F
+    D --> I["Resilience score<br/>+ debrief for family"]
+    H --> I
+    F --> I
+
+    classDef stage fill:#171717,stroke:#34d399,color:#fafafa
+    classDef danger fill:#27272a,stroke:#f87171,color:#fafafa
+    classDef ok fill:#052e16,stroke:#34d399,color:#fafafa
+    classDef neutral fill:#1c1917,stroke:#71717a,color:#a1a1aa
+
+    class A,B,C stage
+    class E,F,G danger
+    class H,I ok
+    class D neutral
