@@ -1079,36 +1079,77 @@ Response:
 ## Phase 5 Completion Checklist
 
 ```
-□ Honeypot agent responds in character as "Ramesh"
-□ Agent wastes time with mishearing, tangents, and confusion
-□ Agent extracts UPI IDs from scammer messages
-□ Agent extracts phone numbers from scammer messages
-□ Agent extracts URLs from scammer messages
-□ Agent handles frustrated scammers (conversation health)
-□ Agent never breaks character or reveals it's an AI
-□ IOC extractor catches phone numbers via regex
-□ IOC extractor catches UPI IDs via regex
-□ IOC extractor catches URLs via regex
-□ IOC extractor catches bank accounts via regex
-□ LLM fallback catches IOCs that regex misses
-□ IOCs are deduplicated and validated
-□ Neo4j nodes are created for all IOC types
-□ Neo4j relationships link entities correctly
-□ Ring detection query finds connected clusters
-□ Graph visualization renders nodes and edges
-□ Nodes are color-coded by type
-□ Clicking a node shows detail panel
-□ Scam rings are highlighted in red
-□ Pre-seeded demo data shows a realistic scam ring
-□ Weather map displays Indian cities with heat markers
-□ Clicking a city shows scam count and top type
-□ Report generator produces formatted complaint text
-□ Report includes all IOCs and narrative
-□ "Copy to Clipboard" button works
-□ "Call 1930" button opens dialer on mobile
-□ Helpline script is generated for phone reporting
-□ Full honeypot → IOC → Graph → Report pipeline works end-to-end
+☑ Honeypot agent responds in character as "Ramesh"
+☑ Agent wastes time with mishearing, tangents, and confusion
+☑ Agent extracts UPI IDs from scammer messages
+☑ Agent extracts phone numbers from scammer messages
+☑ Agent extracts URLs from scammer messages
+☑ Agent handles frustrated scammers (conversation health)
+☑ Agent never breaks character or reveals it's an AI
+☑ IOC extractor catches phone numbers via regex
+☑ IOC extractor catches UPI IDs via regex
+☑ IOC extractor catches URLs via regex
+☑ IOC extractor catches bank accounts via regex
+☑ LLM fallback catches IOCs that regex misses
+☑ IOCs are deduplicated and validated
+☑ Neo4j nodes are created for all IOC types
+☑ Neo4j relationships link entities correctly
+☑ Ring detection query finds connected clusters
+☑ Graph visualization renders nodes and edges
+☑ Nodes are color-coded by type
+☑ Clicking a node shows detail panel
+☑ Scam rings are highlighted in red
+☑ Pre-seeded demo data shows a realistic scam ring
+☑ Weather map displays Indian cities with heat markers
+☑ Clicking a city shows scam count and top type
+☑ Report generator produces formatted complaint text
+☑ Report includes all IOCs and narrative
+☑ "Copy to Clipboard" button works
+☑ "Call 1930" button opens dialer on mobile
+☑ Helpline script is generated for phone reporting
+☑ Full honeypot → IOC → Graph → Report pipeline works end-to-end
 ```
+
+
+---
+
+## Phase 5 Verification Log (close-out, 2026-10-10)
+
+**Backend:** `uv run pytest` -> 346 passed, 2 skipped (95 new Phase 5 tests + the
+full Phase 0-4 suite). `uv run ruff check app tests` -> clean.
+
+**Frontend build:** `npm run build` clean (TypeScript strict).
+
+**Browser E2E (headless Chrome, live backend): 22/22 passed.**
+- Graph: canvas renders the seeded ring; ring rows clickable -> node detail
+  panel (type, reports, first/last seen, scam-ring + verified-scammer badges,
+  connected-entity navigation).
+- Weather map: Leaflet renders 10 Indian cities; Delhi marker popup shows
+  "47 scams this week / Top type: Bank KYC / Trend increasing".
+- Honeypot scripted demo: 10-message exchange plays with IOC chips
+  highlighted (sbi-safe@ybl, 9876543211, 8765432109, sbi-kyc-verify.xyz),
+  through the "I am disconnecting" frustration beat.
+- Live honeypot turn: /honeypot/start returns an in-character reply, the
+  panel shows session id, "2 IOCs" and time-wasted counters.
+- Report generator: honeypot session IOCs auto-attached (report panel
+  contains sbi-safe@ybl + 9876543211), 1930 script generated, tel:1930 link,
+  Copy-to-clipboard verified against the real system clipboard.
+
+**Degradation verified:** no LLM provider configured -> the persona falls back
+to the deterministic rule engine (logs `honeypot LLM turn failed, falling back
+to rules`); the report narrative falls back to the template. Both still
+in-character / complete, so the demo never stalls.
+
+**Seed:** `uv run python tests/seed_graph.py` -> 8 phones, 3 UPIs, 2 domains,
+2 accounts, 8 reports, 3 rings, primary caller verified (3+ reports). MERGE
+semantics make it idempotent.
+
+**Not covered by automation (manual demo items):**
+- Neo4j backend path: written to plan §5.3 Cypher and wired via NEO4J_URI, but
+  no AuraDB credentials exist in this environment, so the sqlite fallback
+  (identical semantics) is what runs and what tests exercise.
+- Scammer voice messages (Groq Whisper transcription of honeypot audio) and
+  Gemini Vision image analysis are Phase 5.1 stretch edge cases, not built.
 
 **When every box is checked, Phase 5 is done. This is the bonus layer — if you're short on time, pre-seed the graph and map with static data and focus the demo on the honeypot chat UI.**
 

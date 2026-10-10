@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mirage Frontend
 
-## Getting Started
+Next.js 16 (App Router) web app for Mirage — landing, Scam Fire Drills, Live Call Guardian, Scammer Hunter graph, and the dashboard.
 
-First, run the development server:
+Part of the [Mirage monorepo](../README.md).
+
+## Run it
 
 ```bash
+npm install
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# verify: http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The backend must be running (or reachable at `NEXT_PUBLIC_API_URL`) for analysis, drill, guardian, and graph pages. The landing page works standalone.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | What it does |
+|-------|--------------|
+| `/` | Landing — layers overview |
+| `/drill` | Scam Fire Drill: pick a scenario, run the simulation, get debriefed + Resilience Score |
+| `/guardian` | Live Call Guardian: WebSocket pipeline stages, Memory Handshake, alerts |
+| `/graph` | Scammer Hunter: Neo4j-powered weather map of active fraud |
+| `/dashboard` | History of drills, scores, evidence |
 
-## Learn More
+## Layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/               # App Router pages (all client components)
+├── components/
+│   ├── ui/            # shadcn/ui primitives
+│   ├── hunter/        # Graph weather-map components
+│   └── navbar.tsx
+└── lib/
+    └── api.ts         # typed client for the FastAPI backend
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev    # next dev (Turbopack)
+npm run build  # next build
+npm run lint   # eslint (flat config, eslint-config-next)
+npm run start  # next start
+```
 
-## Deploy on Vercel
+## Style
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Tailwind CSS 4; brand emerald is `emerald-400` (`#34d399`), scam red is `destructive`.
+- Dark theme by default (`dark` class on `<html>`).
+- Extend `components/ui/` primitives rather than forking one-offs.
+- Social preview image: `public/og-image.png` (wired via `openGraph`/`twitter` metadata in `src/app/layout.tsx`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+Deployed as a Node web service on Render via the repo-root [`render.yaml`](../render.yaml) blueprint (`npm ci && npm run build` → `npm run start`).
