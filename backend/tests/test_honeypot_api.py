@@ -36,7 +36,9 @@ def _turn(client, message, session_id=None, mode="simulate"):
 
 class TestStartAndContinue:
     def test_start_returns_in_character_reply(self, client):
-        resp = _turn(client, "Hello, this is from SBI fraud department. Your account is compromised.")
+        resp = _turn(
+            client, "Hello, this is from SBI fraud department. Your account is compromised."
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["session_id"].startswith("hp-")

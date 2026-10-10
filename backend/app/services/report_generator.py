@@ -193,7 +193,9 @@ def _template_report(data: ReportRequest, iocs: ThreatIOCs, narrative: str, repo
     if iocs.domains:
         actions.append(f"Investigate the fraudulent domain: {iocs.domains[0].value}")
     if iocs.bank_accounts:
-        actions.append(f"Take action against the scammer's bank account: {iocs.bank_accounts[0].value}")
+        actions.append(
+            f"Take action against the scammer's bank account: {iocs.bank_accounts[0].value}"
+        )
     if not actions:
         actions.append("Investigate the reported incident based on the narrative")
 
@@ -292,7 +294,9 @@ My complaint reference number is ________."
 def generate_report(data: ReportRequest, iocs: ThreatIOCs | None = None) -> ReportResponse:
     """Build report_text + helpline_script (plan §5.6)."""
     resolved = iocs if iocs is not None else data.iocs
-    report_id = f"RPT-{datetime.now(timezone.utc).strftime('%Y')}-{datetime.now(timezone.utc).strftime('%m%d')}-{str(abs(hash((data.user_phone, data.incident_date, resolved.total()))) % 100000).zfill(5)}"
+    now = datetime.now(timezone.utc)
+    serial = abs(hash((data.user_phone, data.incident_date, resolved.total()))) % 100000
+    report_id = f"RPT-{now.strftime('%Y')}-{now.strftime('%m%d')}-{serial:05d}"
 
     narrative = _llm_narrative(data, resolved) or _fallback_narrative(data, resolved)
 

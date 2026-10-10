@@ -35,16 +35,46 @@ router = APIRouter(tags=["graph"])
 # ---------------------------------------------------------------------------
 
 DEMO_CITIES: list[MapCity] = [
-    MapCity(city="Delhi", lat=28.6139, lng=77.2090, scam_count=47, top_type="bank_kyc", intensity=0.9, trend="increasing"),
-    MapCity(city="Mumbai", lat=19.0760, lng=72.8777, scam_count=38, top_type="upi_reversal", intensity=0.75, trend="increasing"),
-    MapCity(city="Bangalore", lat=12.9716, lng=77.5946, scam_count=29, top_type="job_offer", intensity=0.6, trend="stable"),
-    MapCity(city="Hyderabad", lat=17.3850, lng=78.4867, scam_count=22, top_type="fedex", intensity=0.45, trend="stable"),
-    MapCity(city="Chennai", lat=13.0827, lng=80.2707, scam_count=18, top_type="lottery", intensity=0.35, trend="decreasing"),
-    MapCity(city="Kolkata", lat=22.5726, lng=88.3639, scam_count=15, top_type="impersonation", intensity=0.3, trend="stable"),
-    MapCity(city="Pune", lat=18.5204, lng=73.8567, scam_count=12, top_type="investment", intensity=0.25, trend="increasing"),
-    MapCity(city="Jaipur", lat=26.9124, lng=75.7873, scam_count=9, top_type="bank_kyc", intensity=0.2, trend="stable"),
-    MapCity(city="Ahmedabad", lat=23.0225, lng=72.5714, scam_count=7, top_type="electricity", intensity=0.15, trend="stable"),
-    MapCity(city="Lucknow", lat=26.8467, lng=80.9462, scam_count=5, top_type="relative_distress", intensity=0.1, trend="decreasing"),
+    MapCity(
+        city="Delhi", lat=28.6139, lng=77.2090, scam_count=47,
+        top_type="bank_kyc", intensity=0.9, trend="increasing",
+    ),
+    MapCity(
+        city="Mumbai", lat=19.0760, lng=72.8777, scam_count=38,
+        top_type="upi_reversal", intensity=0.75, trend="increasing",
+    ),
+    MapCity(
+        city="Bangalore", lat=12.9716, lng=77.5946, scam_count=29,
+        top_type="job_offer", intensity=0.6, trend="stable",
+    ),
+    MapCity(
+        city="Hyderabad", lat=17.3850, lng=78.4867, scam_count=22,
+        top_type="fedex", intensity=0.45, trend="stable",
+    ),
+    MapCity(
+        city="Chennai", lat=13.0827, lng=80.2707, scam_count=18,
+        top_type="lottery", intensity=0.35, trend="decreasing",
+    ),
+    MapCity(
+        city="Kolkata", lat=22.5726, lng=88.3639, scam_count=15,
+        top_type="impersonation", intensity=0.3, trend="stable",
+    ),
+    MapCity(
+        city="Pune", lat=18.5204, lng=73.8567, scam_count=12,
+        top_type="investment", intensity=0.25, trend="increasing",
+    ),
+    MapCity(
+        city="Jaipur", lat=26.9124, lng=75.7873, scam_count=9,
+        top_type="bank_kyc", intensity=0.2, trend="stable",
+    ),
+    MapCity(
+        city="Ahmedabad", lat=23.0225, lng=72.5714, scam_count=7,
+        top_type="electricity", intensity=0.15, trend="stable",
+    ),
+    MapCity(
+        city="Lucknow", lat=26.8467, lng=80.9462, scam_count=5,
+        top_type="relative_distress", intensity=0.1, trend="decreasing",
+    ),
 ]
 
 DEMO_NATIONAL_STATS = {

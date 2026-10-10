@@ -52,7 +52,10 @@ URL_RE = re.compile(
     r"|tinyurl\.com/[a-zA-Z0-9]+",
     re.IGNORECASE,
 )
-DOMAIN_RE = re.compile(r"\b(?:[a-zA-Z0-9-]+\.)+(?:com|net|org|xyz|top|in|io|info|site|online|biz|co)\b", re.IGNORECASE)
+DOMAIN_RE = re.compile(
+    r"\b(?:[a-zA-Z0-9-]+\.)+(?:com|net|org|xyz|top|in|io|info|site|online|biz|co)\b",
+    re.IGNORECASE,
+)
 
 # Bank accounts: 9-18 digits, only when near an account keyword (plan §5.2).
 ACCOUNT_KEYWORD_RE = re.compile(
@@ -305,7 +308,10 @@ def llm_extract_iocs(text: str) -> ThreatIOCs:
         return ThreatIOCs()
 
     def items(key: str) -> list[IOCItem]:
-        return [IOCItem(value=v, source="llm", context="llm extraction") for v in _to_str_list(data.get(key))]
+        return [
+            IOCItem(value=v, source="llm", context="llm extraction")
+            for v in _to_str_list(data.get(key))
+        ]
 
     out = ThreatIOCs(
         phone_numbers=items("phone_numbers"),

@@ -41,9 +41,6 @@ router = APIRouter(prefix="/honeypot", tags=["honeypot"])
 # In-process session store (same pattern as guardian.ACTIVE_SESSIONS).
 SESSIONS: dict[str, dict] = {}
 
-PERSONA_NAMES = {"ramesh": "Ramesh", "sunita": "Sunita", "vikram": "Vikram", "meena": "Meena"}
-
-
 class _Session:
     def __init__(self, persona: str, mode: str):
         self.session_id = f"hp-{uuid.uuid4().hex[:12]}"
@@ -153,7 +150,6 @@ def get_session(session_id: str) -> HoneypotSessionOut:
     session = SESSIONS.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
-    persona_name = PERSONA_NAMES.get(session.persona, "Ramesh")
     return HoneypotSessionOut(
         session_id=session.session_id,
         persona=session.persona,
@@ -179,16 +175,81 @@ def get_session(session_id: str) -> HoneypotSessionOut:
 # ---------------------------------------------------------------------------
 
 SCRIPTED_DEMO = [
-    {"role": "scammer", "text": "Good afternoon, I am Officer Rajesh from the SBI Fraud Department. Your KYC is incomplete and your account will be blocked in 30 minutes."},
-    {"role": "ramesh", "text": "Hello beta! Oh my god, my account? I just got my pension credited yesterday. Is the money safe? Please tell me what to do.", "tactic": "compliance"},
-    {"role": "scammer", "text": "Your money is at risk. Transfer ₹50,000 to this safe UPI immediately: sbi-safe@ybl"},
-    {"role": "ramesh", "text": "Okay beta, I'm writing it down. S-B-I dash safe at Y-B-L? Is that right? Or is it S-B-I underscore? My grandson told me about this UPI but I always forget the format. And how much did you say? 50,000 or 5,000?", "tactic": "mishearing"},
-    {"role": "scammer", "text": "50,000! And call me on 9876543211 when done. Or WhatsApp me on 8765432109."},
-    {"role": "ramesh", "text": "98765... sorry beta, the line is bad. 9876543211 or 9876543210? My hearing aid battery is low today. I will save your number properly.", "tactic": "mishearing"},
-    {"role": "scammer", "text": "9876543211!! Also open this link and enter your details: https://sbi-kyc-verify.xyz/update"},
-    {"role": "ramesh", "text": "The link is not opening beta, it shows a big picture of a lock. What does the website say? Is it like a barcode? Meanwhile my knees are giving me trouble, let me sit down. What do I do next?", "tactic": "app_failure"},
-    {"role": "scammer", "text": "USELESS! Are you stupid? Just open the link! I am disconnecting and calling the next person."},
-    {"role": "ramesh", "text": "No no, please don't go! I am trying, beta. Just tell me one more time. I have ₹2,00,000 in my account ready — I mean, for the transfer!", "tactic": "compliance"},
+    {
+        "role": "scammer",
+        "text": (
+            "Good afternoon, I am Officer Rajesh from the SBI Fraud Department. "
+            "Your KYC is incomplete and your account will be blocked in 30 minutes."
+        ),
+    },
+    {
+        "role": "ramesh",
+        "text": (
+            "Hello beta! Oh my god, my account? I just got my pension credited "
+            "yesterday. Is the money safe? Please tell me what to do."
+        ),
+        "tactic": "compliance",
+    },
+    {
+        "role": "scammer",
+        "text": (
+            "Your money is at risk. Transfer ₹50,000 to this safe UPI "
+            "immediately: sbi-safe@ybl"
+        ),
+    },
+    {
+        "role": "ramesh",
+        "text": (
+            "Okay beta, I'm writing it down. S-B-I dash safe at Y-B-L? Is that "
+            "right? Or is it S-B-I underscore? My grandson told me about this UPI "
+            "but I always forget the format. And how much did you say? 50,000 or "
+            "5,000?"
+        ),
+        "tactic": "mishearing",
+    },
+    {
+        "role": "scammer",
+        "text": "50,000! And call me on 9876543211 when done. Or WhatsApp me on 8765432109.",
+    },
+    {
+        "role": "ramesh",
+        "text": (
+            "98765... sorry beta, the line is bad. 9876543211 or 9876543210? My "
+            "hearing aid battery is low today. I will save your number properly."
+        ),
+        "tactic": "mishearing",
+    },
+    {
+        "role": "scammer",
+        "text": (
+            "9876543211!! Also open this link and enter your details: "
+            "https://sbi-kyc-verify.xyz/update"
+        ),
+    },
+    {
+        "role": "ramesh",
+        "text": (
+            "The link is not opening beta, it shows a big picture of a lock. What "
+            "does the website say? Is it like a barcode? Meanwhile my knees are "
+            "giving me trouble, let me sit down. What do I do next?"
+        ),
+        "tactic": "app_failure",
+    },
+    {
+        "role": "scammer",
+        "text": (
+            "USELESS! Are you stupid? Just open the link! I am disconnecting and "
+            "calling the next person."
+        ),
+    },
+    {
+        "role": "ramesh",
+        "text": (
+            "No no, please don't go! I am trying, beta. Just tell me one more "
+            "time. I have ₹2,00,000 in my account ready — I mean, for the transfer!"
+        ),
+        "tactic": "compliance",
+    },
 ]
 
 SCRIPTED_IOC_HIGHLIGHTS = {

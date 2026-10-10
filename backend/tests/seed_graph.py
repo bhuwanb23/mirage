@@ -103,12 +103,27 @@ def seed(store) -> dict:
     for name, phones in SCAMMER_NAMES.items():
         store.merge_node("ScammerName", name, {}, on_create={"aliases": [], "first_seen": ts})
         for phone in phones:
-            store.merge_edge(node_id("ScammerName", name), "OWNS", node_id("PhoneNumber", phone), {"confidence": 0.8})
+            store.merge_edge(
+                node_id("ScammerName", name),
+                "OWNS",
+                node_id("PhoneNumber", phone),
+                {"confidence": 0.8},
+            )
 
     for phone, upi in PHONE_UPI:
-        store.merge_edge(node_id("PhoneNumber", phone), "USES_UPI", node_id("UPI_ID", upi), {"first_seen": ts})
+        store.merge_edge(
+            node_id("PhoneNumber", phone),
+            "USES_UPI",
+            node_id("UPI_ID", upi),
+            {"first_seen": ts},
+        )
     for phone, domain in PHONE_DOMAIN:
-        store.merge_edge(node_id("PhoneNumber", phone), "LINKED_TO_DOMAIN", node_id("Domain", domain), {})
+        store.merge_edge(
+            node_id("PhoneNumber", phone),
+            "LINKED_TO_DOMAIN",
+            node_id("Domain", domain),
+            {},
+        )
     for upi, account in UPI_ACCOUNT:
         store.merge_edge(node_id("UPI_ID", upi), "DEPOSITS_TO", node_id("BankAccount", account), {})
 

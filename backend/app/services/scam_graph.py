@@ -250,7 +250,12 @@ class SQLiteGraphStore:
                 "Domain",
                 item.value,
                 {},
-                on_create={"tld": tld, "first_seen": today, "is_suspicious": True, "context": item.context},
+                on_create={
+                    "tld": tld,
+                    "first_seen": today,
+                    "is_suspicious": True,
+                    "context": item.context,
+                },
             )
             domain_ids.append(nid)
             if self.merge_edge(report_nid, "INVOLVES_DOMAIN", nid, {"context": item.context}):
@@ -374,7 +379,11 @@ class SQLiteGraphStore:
                         queue.append(nb)
             if len(component) < min_size:
                 continue
-            phones = [nodes[n][1].get("key", n.split(":", 1)[1]) for n in component if nodes[n][0] == "PhoneNumber"]
+            phones = [
+                n.split(":", 1)[1]
+                for n in component
+                if nodes[n][0] == "PhoneNumber"
+            ]
             upis = [n.split(":", 1)[1] for n in component if nodes[n][0] == "UPI_ID"]
             domains = [n.split(":", 1)[1] for n in component if nodes[n][0] == "Domain"]
             accounts = [n.split(":", 1)[1] for n in component if nodes[n][0] == "BankAccount"]
