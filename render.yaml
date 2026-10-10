@@ -1,6 +1,10 @@
-# Render blueprint — Mirage
+# Render blueprint — Mirage (free-tier only)
 # Docs: docs/deploy.md
 # Provisioning this file does NOT run the SQL/Cypher. Do that first (see docs/deploy.md).
+#
+# Free compute is only available for web services (and static sites).
+# Background workers require a paid plan — run the Telegram bot locally instead:
+#   cd bot && uv sync && uv run python main.py
 
 services:
   - type: web
@@ -33,29 +37,13 @@ services:
       - key: GEMINI_API_KEY
         sync: false
 
-  # Node web service (SSR). Free compute is not always offered for every
-  # workspace/service via Blueprint — use starter (0.5 CPU / 512 MB).
   - type: web
     name: mirage-web
     runtime: node
     rootDir: frontend
-    plan: starter
+    plan: free
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://mirage-api.onrender.com
-
-  # Workers have no free plan — starter is the cheapest valid option.
-  - type: worker
-    name: mirage-bot
-    runtime: python
-    rootDir: bot
-    plan: starter
-    buildCommand: pip install uv && uv sync --frozen
-    startCommand: uv run python main.py
-    envVars:
-      - key: TELEGRAM_BOT_TOKEN
-        sync: false
-      - key: MIRAGE_API_URL
         value: https://mirage-api.onrender.com
