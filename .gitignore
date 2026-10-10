@@ -37,3 +37,11 @@ backend/scripts/*_out.*
 .graphify_detect.json
 .graphify_python
 .graphify_root
+
+# Generated / scratch tooling
+.freebuff/
+graphify-out/
+brag-output/work/
+
+# Phase 5 runtime state — scam graph sqlite store (seed with tests/seed_graph.py)
+backend/data/

@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose an improvement or a new capability for Mirage
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What gap does this fill? Who benefits (families, elders, security teams)?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should Mirage do that it doesn't today?
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which layer?
+      options:
+        - Scam Fire Drills
+        - Live Call Guardian
+        - Scammer Hunter
+        - Zero-install Bot
+        - Analysis engine
+        - Docs / DX
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: contributing
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to open a PR for this

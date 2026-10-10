@@ -35,10 +35,11 @@ services:
 
   - type: web
     name: mirage-web
-    runtime: static
-    staticPublishPath: frontend/out
+    runtime: node
+    rootDir: frontend
     plan: free
-    buildCommand: cd frontend && npm ci && npm run build && npm run export
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://mirage-api.onrender.com
