@@ -2,16 +2,22 @@ Mirage — The Scam Vaccine
 
 Don't detect scams. Vaccinate people against them.
 
-A 60-second look at how Mirage turns ordinary people into the first line of defense:
+This is the call that gets everyone.
 
-• Scam Fire Drills — personalized simulated attacks (bank KYC, fake parcel, OTP, fake job) built from your exposure profile. You fail in the drill so you don't fail for real. Every drill ends in a debrief and a Resilience Score.
+An elderly mother picks up. A "bank officer" runs the oldest script in the book — hook, authority, isolation, urgency, payment. He gets her to the OTP. He is at 88%.
 
-• Live Call Guardian — real-time 5-stage pipeline detection on live calls: Hook → Authority → Isolation → Urgency → Payment. Plus a Memory Handshake only your family can answer.
+Mirage stops it before the transfer.
 
-• Scammer Hunter — an AI honeypot eats scam bait, extracts IOCs, and lights up a Neo4j Scam Graph as a weather map of active fraud.
+The daughter's phone lights up mid-call. The emerald shield interrupts stage 4 · Urgency and strikes out stage 5 · Payment before money moves.
 
-• Zero-install Bot — forward a text, a voice note, or a screenshot to Telegram. Get a verdict and red flags in seconds — no app to install.
+Then the Memory Handshake — questions only family can answer: "What did you cook for Dad's birthday?" "Where did we go in 2019?" — verified live, because a scammer doesn't know you made biriyani for Dad's birthday, and didn't go to Coorg in 2019.
 
-The scam call that used to work on your parents now gets caught live, stage by stage — and the whole family learns from the debrief.
+The debrief scores what you missed. The Guardian dashboard shows 247 calls shielded, 18 scams blocked, ₹4.2L protected — every stage of the 5-stage pipeline tracked live.
+
+Forward a suspicious screenshot to the bot. Zero install. It comes back: SCAM · 97% confidence — artificial urgency, authority impersonation, OTP request, isolation instruction. All four flags, in seconds.
+
+Every catch lights the Neo4j Scam Graph — a live weather map of active fraud: the number, the fake domain, the UPI relay, the mule account, the cash-out node. One network, visible.
+
+Don't detect scams. Vaccinate people against them.
 
 Mirage. The scam vaccine.

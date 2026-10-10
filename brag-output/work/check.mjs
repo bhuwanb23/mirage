@@ -7,22 +7,28 @@ const stillsDir = path.join(root, "stills-check");
 import { mkdirSync } from "node:fs";
 mkdirSync(stillsDir, { recursive: true });
 
-// key times: every scene + mid-transition / internal cut points
+// key times: every scene + mid-transition / internal cut points (v2 10-scene narrative)
 const times = [
-  // S1 hook
-  0.0, 1.0, 2.0, 3.0,
-  // S2 reveal
-  3.2, 4.0, 5.0, 6.5, 7.8,
-  // S3 fire drill
-  8.2, 9.5, 11.4, 11.7, 13.0, 14.1, 14.4, 15.5, 16.7, 17.0, 19.0, 20.8,
-  // S4 guardian
-  21.1, 22.0, 24.0, 25.0, 25.3, 27.0, 29.5, 29.8, 32.0, 34.5, 35.8,
-  // S5 bot + verdict + graph
-  36.0, 36.6, 37.5, 39.0, 39.8, 41.0, 43.1, 43.4, 45.0, 46.8,
-  // S6 four layers
-  47.0, 47.6, 48.5, 50.0, 53.0, 55.0,
-  // S7 outro
-  55.3, 56.0, 57.0, 58.5, 59.9,
+  // S1 phone rings
+  0.0, 1.0, 2.0, 3.0, 3.4,
+  // S2 hook ladder
+  3.6, 5.0, 7.0, 10.5, 11.5, 14.0, 17.0,
+  // S3 urgency + payment (cut at 21 by save)
+  17.3, 18.5, 20.0, 20.9,
+  // S4 the save
+  21.3, 22.5, 24.0, 26.0, 28.5,
+  // S5 memory handshake
+  29.0, 31.5, 33.5, 36.0, 38.5,
+  // S6 debrief bridge
+  39.0, 41.0, 43.0, 44.3,
+  // S7 guardian dashboard
+  44.6, 45.5, 47.0, 49.0,
+  // S8 bot verdict
+  49.2, 50.0, 50.9, 51.5, 52.1,
+  // S9 scam graph
+  52.4, 53.5, 55.2,
+  // S10 outro
+  55.6, 56.5, 57.5, 59.5,
 ];
 
 const browser = await chromium.launch();
