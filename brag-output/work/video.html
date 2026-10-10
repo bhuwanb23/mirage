@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mirage — The Scam Vaccine</title>
+<style>
+  /* ---- fonts (local Geist, bundled for deterministic frames) ---- */
+  @font-face {
+    font-family: "Geist";
+    src: url("fonts/Geist-400.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Geist Mono";
+    src: url("fonts/GeistMono-400.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: block;
+  }
+
+  /* ---- design tokens (mirrors frontend/src/app/globals.css .dark) ---- */
+  :root {
+    --bg: oklch(0.145 0 0);
+    --fg: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-fg: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-fg: oklch(0.708 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --emerald: oklch(0.792 0.209 151.711); /* emerald-400 */
+    --red: oklch(0.704 0.191 22.216);
+    --amber: oklch(0.769 0.188 70.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1920px; height: 1080px;
+    background: #000;
+    overflow: hidden;
+    font-family: "Geist", system-ui, sans-serif;
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+
+  #stage {
+    position: relative;
+    width: 1920px; height: 1080px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .scene {
+    position: absolute; inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    will-change: opacity, transform;
+  }
+
+  /* =================== SCENE 1 · HOOK =================== */
+  #s1 { background: #050505; display: flex; align-items: center; justify-content: center; }
+  #s1 .hook-card {
+    width: 980px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 40px 40px;
+    box-shadow: 0 40px 120px oklch(0 0 0 / 60%);
+  }
+  #s1 .chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: "Geist Mono", monospace;
+    font-size: 15px; letter-spacing: 0.08em;
+    color: #fff;
+    background: var(--red);
+    border-radius: 999px;
+    padding: 8px 16px;
+    margin-bottom: 28px;
+  }
+  #s1 .chip .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #fff;
+  }
+  #s1 .line {
+    font-size: 34px; line-height: 1.45;
+    color: var(--fg);
+    min-height: 2.9em;
+  }
+  #s1 .caret {
+    display: inline-block; width: 3px; height: 0.95em;
+    background: var(--emerald);
+    margin-left: 4px; vertical-align: -0.08em;
+  }
+  #s1 .sub {
+    margin-top: 22px;
+    font-family: "Geist Mono", monospace;
+    font-size: 14px; color: var(--muted-fg);
+    letter-spacing: 0.06em;
+  }
+
+  /* =================== SCENE 2 · REVEAL =================== */
+  #s2 { background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  #s2 .wrap { text-align: center; max-width: 1500px; }
+  #s2 .shield {
+    width: 72px; height: 72px; margin: 0 auto 44px;
+    color: var(--emerald);
+  }
+  #s2 h1 {
+    font-size: 88px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.12;
+  }
+  #s2 .w {
+    display: inline-block; opacity: 0; transform: translateY(28px);
+    will-change: opacity, transform;
+  }
+  #s2 .em { color: var(--emerald); }
+  #s2 .gap { display: inline-block; width: 0.32em; }
+
+  /* =================== shared: full-bleed stills =================== */
+  .still-wrap {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    opacity: 0;
+  }
+  .still-wrap img {
+    position: absolute; inset: 0;
+    width: 1920px; height: 1080px;
+    object-fit: cover; object-position: top center;
+    transform-origin: center center;
+    will-change: transform;
+  }
+  .still-wrap .veil {
+    position: absolute; inset: 0;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .scene-chip {
+    position: absolute; top: 48px; left: 56px;
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: "Geist Mono", monospace;
+    font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg);
+    background: oklch(0.145 0 0 / 75%);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 10px 18px;
+    backdrop-filter: blur(8px);
+    z-index: 5;
+  }
+  .scene-chip .em { color: var(--emerald); }
+
+  /* =================== SCENE 4 · stage tracker strip =================== */
+  #s4-stages {
+    position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
+    display: flex; gap: 14px; z-index: 6;
+  }
+  #s4-stages .st {
+    font-family: "Geist Mono", monospace;
+    font-size: 15px; letter-spacing: 0.06em;
+    color: var(--muted-fg);
+    background: oklch(0.145 0 0 / 85%);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 12px 20px;
+    opacity: 0.35;
+    transform: translateY(10px);
+    white-space: nowrap;
+  }
+  #s4-stages .st.on {
+    opacity: 1; transform: translateY(0);
+    color: #04140d;
+    background: var(--emerald);
+    border-color: transparent;
+  }
+  #s4-stages .st.fire {
+    opacity: 1; transform: translateY(0);
+    color: #fff;
+    background: var(--red);
+    border-color: transparent;
+  }
+
+  /* =================== SCENE 5 · bot + verdict =================== */
+  #s5 { background: var(--bg); }
+  #s5 .chat {
+    position: absolute; left: 180px; top: 200px; width: 620px;
+  }
+  #s5 .bubble-user {
+    display: flex; justify-content: flex-end; margin-bottom: 28px;
+  }
+  #s5 .shot {
+    width: 220px; height: 150px; border-radius: 14px;
+    background:
+      linear-gradient(160deg, oklch(0.27 0.02 200), oklch(0.18 0 0));
+    border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    transform-origin: right center;
+  }
+  #s5 .shot::after {
+    content: "screenshot_otp.jpg";
+    position: absolute; left: 14px; bottom: 12px;
+    font-family: "Geist Mono", monospace; font-size: 12px;
+    color: var(--muted-fg);
+  }
+  #s5 .shot .bar {
+    position: absolute; top: 16px; left: 14px; right: 14px; height: 8px;
+    background: oklch(1 0 0 / 12%); border-radius: 4px;
+  }
+  #s5 .shot .bar2 { top: 36px; right: 60px; }
+  #s5 .bot-row {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+  }
+  #s5 .avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--emerald);
+    color: #04140d;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 22px;
+    flex-shrink: 0;
+  }
+  #s5 .typing {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; border-top-left-radius: 4px;
+    padding: 18px 22px; display: flex; gap: 8px; align-items: center;
+  }
+  #s5 .typing i {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--muted-fg); display: block;
+  }
+
+  #s5 .verdict {
+    position: absolute; right: 160px; top: 150px;
+    width: 720px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 34px 38px 30px;
+    opacity: 0; transform: translateY(26px) scale(0.98);
+    transform-origin: top right;
+    box-shadow: 0 40px 100px oklch(0 0 0 / 50%);
+    will-change: opacity, transform;
+  }
+  #s5 .v-head {
+    display: flex; align-items: baseline; gap: 18px;
+    padding-bottom: 18px; border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  #s5 .v-badge {
+    font-family: "Geist Mono", monospace;
+    font-size: 22px; font-weight: 700; letter-spacing: 0.06em;
+    color: #fff; background: var(--red);
+    border-radius: 8px; padding: 8px 14px;
+  }
+  #s5 .v-conf { font-size: 22px; color: var(--muted-fg); }
+  #s5 .v-conf b { color: var(--fg); font-weight: 600; }
+  #s5 .v-meta {
+    display: flex; gap: 32px; margin-bottom: 18px;
+    font-size: 17px; color: var(--muted-fg);
+  }
+  #s5 .v-meta b { color: var(--fg); font-weight: 500; }
+  #s5 .v-meta .crit { color: var(--red); font-weight: 600; }
+  #s5 .v-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted-fg); margin-bottom: 10px;
+  }
+  #s5 .v-flags { list-style: none; margin-bottom: 18px; }
+  #s5 .v-flags li {
+    font-size: 18px; line-height: 1.55; color: var(--fg);
+    padding-left: 22px; position: relative;
+  }
+  #s5 .v-flags li::before {
+    content: ""; position: absolute; left: 0; top: 0.55em;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red);
+  }
+  #s5 .v-sum {
+    font-size: 17px; line-height: 1.5; color: var(--muted-fg);
+    margin-bottom: 16px;
+  }
+  #s5 .v-do {
+    font-size: 18px; line-height: 1.5; color: var(--fg);
+    padding: 14px 16px; border-radius: 10px;
+    background: oklch(0.792 0.209 151.711 / 10%);
+    border: 1px solid oklch(0.792 0.209 151.711 / 25%);
+  }
+  #s5 .v-do b { color: var(--emerald); font-weight: 600; }
+  #s5 .v-foot {
+    margin-top: 16px; font-size: 15px; color: var(--muted-fg);
+    font-style: italic;
+  }
+
+  /* =================== SCENE 6 · four layers =================== */
+  #s6 { background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  #s6 .grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+    width: 1280px;
+  }
+  #s6 .lc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 30px 34px 28px;
+    opacity: 0; transform: translateX(80px);
+    will-change: opacity, transform;
+  }
+  #s6 .lc-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  #s6 .lc-ico {
+    width: 28px; height: 28px; color: var(--emerald);
+  }
+  #s6 .lc-phase {
+    font-family: "Geist Mono", monospace;
+    font-size: 12px; letter-spacing: 0.08em;
+    color: var(--muted-fg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 12px;
+  }
+  #s6 .lc-title { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 12px; }
+  #s6 .lc-body { font-size: 17px; line-height: 1.55; color: var(--muted-fg); }
+
+  /* =================== SCENE 7 · OUTRO =================== */
+  #s7 { background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  #s7 .wrap { text-align: center; }
+  #s7 .shield {
+    width: 88px; height: 88px; margin: 0 auto 36px;
+    color: var(--emerald);
+    opacity: 0; transform: scale(0.7);
+  }
+  #s7 h1 {
+    font-size: 120px; font-weight: 700; letter-spacing: -0.04em;
+    opacity: 0; transform: translateY(30px);
+  }
+  #s7 .tag {
+    margin-top: 18px;
+    font-family: "Geist Mono", monospace;
+    font-size: 30px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--emerald);
+    opacity: 0; transform: translateY(20px);
+  }
+  #s7 .hero {
+    margin-top: 48px; font-size: 22px; color: var(--muted-fg);
+    opacity: 0;
+  }
+
+  /* vignette for depth on still scenes */
+  #vignette {
+    position: absolute; inset: 0; pointer-events: none; z-index: 20;
+    background: radial-gradient(ellipse at center, transparent 55%, oklch(0 0 0 / 45%) 100%);
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ========== SCENE 1 · HOOK ========== -->
+  <div class="scene" id="s1">
+    <div class="hook-card">
+      <div class="chip"><span class="dot" id="s1-dot"></span>1 · Hook</div>
+      <div class="line"><span id="s1-type"></span><span class="caret" id="s1-caret"></span></div>
+      <div class="sub">LIVE CALL · DETECTED PIPELINE</div>
+    </div>
+  </div>
+
+  <!-- ========== SCENE 2 · REVEAL ========== -->
+  <div class="scene" id="s2">
+    <div class="wrap">
+      <svg class="shield" id="s2-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      <h1 id="s2-h1"></h1>
+    </div>
+  </div>
+
+  <!-- ========== SCENE 3 · FIRE DRILL ========== -->
+  <div class="scene" id="s3">
+    <div class="still-wrap" id="s3-a"><img id="s3-img-a" src="stills/03-drill-setup.png" alt="" /><div class="veil"></div></div>
+    <div class="still-wrap" id="s3-b"><img id="s3-img-b" src="stills/04-drill-briefing.png" alt="" /><div class="veil"></div></div>
+    <div class="still-wrap" id="s3-c"><img id="s3-img-c" src="stills/05-drill-run.png" alt="" /><div class="veil"></div></div>
+    <div class="still-wrap" id="s3-d"><img id="s3-img-d" src="stills/06-drill-debrief.png" alt="" /><div class="veil"></div></div>
+    <div class="scene-chip">Scam Fire Drills <span class="em">· Phase 3</span></div>
+  </div>
+
+  <!-- ========== SCENE 4 · LIVE CALL GUARDIAN ========== -->
+  <div class="scene" id="s4">
+    <div class="still-wrap" id="s4-a"><img id="s4-img-a" src="stills/07-guardian-idle.png" alt="" /><div class="veil"></div></div>
+    <div class="still-wrap" id="s4-b"><img id="s4-img-b" src="stills/08-guardian-mid.png" alt="" /><div class="veil"></div></div>
+    <div class="still-wrap" id="s4-c"><img id="s4-img-c" src="stills/09-guardian-late.png" alt="" /><div class="veil"></div></div>
+    <div class="scene-chip">Live Call Guardian <span class="em">· Phase 4</span></div>
+    <div id="s4-stages">
+      <span class="st" data-i="0">1 · Hook</span>
+      <span class="st" data-i="1">2 · Authority</span>
+      <span class="st" data-i="2">3 · Isolation</span>
+      <span class="st" data-i="3">4 · Urgency</span>
+      <span class="st fire" data-i="4">5 · Payment</span>
+    </div>
+  </div>
+
+  <!-- ========== SCENE 5 · BOT + HUNTER ========== -->
+  <div class="scene" id="s5">
+    <div class="scene-chip">Zero-install Bot <span class="em">· Phase 2 → Scammer Hunter · Phase 5</span></div>
+
+    <div class="chat" id="s5-chat">
+      <div class="bubble-user">
+        <div class="shot" id="s5-shot">
+          <div class="bar"></div><div class="bar bar2"></div>
+        </div>
+      </div>
+      <div class="bot-row" id="s5-botrow">
+        <div class="avatar">M</div>
+        <div class="typing" id="s5-typing"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+
+    <div class="verdict" id="s5-verdict">
+      <div class="v-head">
+        <span class="v-badge">SCAM DETECTED</span>
+        <span class="v-conf"><b>93%</b> confident</span>
+      </div>
+      <div class="v-meta">
+        <span><b>Type:</b> Not Classified</span>
+        <span><b>Risk:</b> <span class="crit">CRITICAL</span></span>
+      </div>
+      <div class="v-label">Red Flags</div>
+      <ul class="v-flags">
+        <li>Urgency: blocked within 10 minutes</li>
+        <li>Authority: Officer from the SBI fraud department</li>
+        <li>Payment demand: asks for OTP and UPI transfer</li>
+      </ul>
+      <div class="v-label">Summary</div>
+      <p class="v-sum">Caller impersonates an SBI fraud officer and pressures for OTP and UPI transfer.</p>
+      <div class="v-do"><b>What to do:</b> Hang up. Never share OTP, PIN, or UPI details.</div>
+      <div class="v-foot">Report to 1930 helpline · cybercrime.gov.in</div>
+    </div>
+
+    <div class="still-wrap" id="s5-graph"><img id="s5-img-graph" src="stills/10-graph.png" alt="" /><div class="veil"></div></div>
+  </div>
+
+  <!-- ========== SCENE 6 · FOUR LAYERS ========== -->
+  <div class="scene" id="s6">
+    <div class="grid">
+      <div class="lc" data-i="0">
+        <div class="lc-top">
+          <svg class="lc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="lc-phase">Phase 3</span>
+        </div>
+        <div class="lc-title">Scam Fire Drills</div>
+        <div class="lc-body">A personalized scam simulation — bank KYC, fake parcel, OTP, fake job — built for your exposure. Then a debrief and a Resilience Score.</div>
+      </div>
+      <div class="lc" data-i="1">
+        <div class="lc-top">
+          <svg class="lc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span class="lc-phase">Phase 4</span>
+        </div>
+        <div class="lc-title">Live Call Guardian</div>
+        <div class="lc-body">Real-time 5-stage pipeline detection on live calls: Hook → Authority → Isolation → Urgency → Payment. Plus a Memory Handshake only your family can answer.</div>
+      </div>
+      <div class="lc" data-i="2">
+        <div class="lc-top">
+          <svg class="lc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          <span class="lc-phase">Phase 5</span>
+        </div>
+        <div class="lc-title">Scammer Hunter</div>
+        <div class="lc-body">An AI honeypot eats scam bait, extracts IOCs, and lights up a Neo4j Scam Graph as a weather map of active fraud.</div>
+      </div>
+      <div class="lc" data-i="3">
+        <div class="lc-top">
+          <svg class="lc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          <span class="lc-phase">Phase 2</span>
+        </div>
+        <div class="lc-title">Zero-install Bot</div>
+        <div class="lc-body">Forward a text, a voice note, or a screenshot to Telegram. Get a verdict and red flags in seconds — no app to install.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SCENE 7 · OUTRO ========== -->
+  <div class="scene" id="s7">
+    <div class="wrap">
+      <svg class="shield" id="s7-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      <h1 id="s7-title">Mirage</h1>
+      <div class="tag" id="s7-tag">The Scam Vaccine</div>
+      <div class="hero" id="s7-hero">Don't detect scams. Vaccinate people against them.</div>
+    </div>
+  </div>
+
+  <div id="vignette"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ================= math helpers (pure) ================= */
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, x) => a + (b - a) * x;
+const ease = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }; // smoothstep
+const easeOut = (x) => { x = clamp(x, 0, 1); return 1 - (1 - x) * (1 - x); };
+const range = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+
+/* window visibility with fade in/out (0 outside [start,end)) */
+function sceneVis(t, start, end, fi = 0.35, fo = 0.35) {
+  if (t < start || t >= end) return 0;
+  const fadeIn = ease(range(t, start, start + fi));
+  const fadeOut = 1 - ease(range(t, end - fo, end));
+  return fadeIn * fadeOut;
+}
+
+/* dip-to-black alpha for still cuts: peaks=1 in the middle, 0 at edges */
+function cutDip(t, at, half = 0.18) {
+  const d = Math.abs(t - at);
+  return d >= half ? 1 : ease(d / half);
+}
+
+/* ================= DOM refs ================= */
+const $ = (id) => document.getElementById(id);
+const stage = $("stage");
+const scenes = {
+  s1: $("s1"), s2: $("s2"), s3: $("s3"), s4: $("s4"),
+  s5: $("s5"), s6: $("s6"), s7: $("s7"),
+};
+
+/* scene windows (overlap for crossfades; content uses dip-to-bg internally) */
+const W = {
+  s1: [0.0, 3.35],
+  s2: [2.95, 8.35],
+  s3: [7.95, 21.3],
+  s4: [20.85, 36.3],
+  s5: [35.85, 47.3],
+  s6: [46.85, 55.3],
+  s7: [54.85, 60.0],
+};
+
+/* ================= scene 1 ================= */
+const HOOK_TEXT = "This is Officer Rajesh from the SBI fraud department\u2026";
+const elS1Type = $("s1-type");
+const elS1Caret = $("s1-caret");
+const elS1Dot = $("s1-dot");
+
+/* ================= scene 2 ================= */
+const WORDS = [
+  { text: "Don't", em: false },
+  { text: "detect", em: false },
+  { text: "scams.", em: false },
+  { text: "br" },
+  { text: "Vaccinate", em: true },
+  { text: "people", em: true },
+  { text: "against", em: true },
+  { text: "them.", em: true },
+];
+const elS2H1 = $("s2-h1");
+const elS2Shield = $("s2-shield");
+
+// build word spans once
+(function buildWords() {
+  const frag = document.createDocumentFragment();
+  WORDS.forEach((w, i) => {
+    if (w.text === "br") { frag.appendChild(document.createElement("br")); return; }
+    const s = document.createElement("span");
+    s.className = "w" + (w.em ? " em" : "");
+    s.textContent = w.text;
+    s.dataset.i = String(i);
+    frag.appendChild(s);
+    const g = document.createElement("span");
+    g.className = "gap";
+    frag.appendChild(g);
+  });
+  elS2H1.appendChild(frag);
+})();
+const wordEls = Array.from(elS2H1.querySelectorAll(".w"));
+
+/* ================= scene 3 stills ================= */
+const s3cuts = [
+  { wrap: $("s3-a"), img: $("s3-img-a"), a: 8.35, b: 11.55, z0: 1.0,  z1: 1.07 },
+  { wrap: $("s3-b"), img: $("s3-img-b"), a: 11.55, b: 14.25, z0: 1.06, z1: 1.0 },
+  { wrap: $("s3-c"), img: $("s3-img-c"), a: 14.25, b: 16.85, z0: 1.0,  z1: 1.05 },
+  { wrap: $("s3-d"), img: $("s3-img-d"), a: 16.85, b: 20.9,  z0: 1.02, z1: 1.10 },
+];
+const s3chip = document.querySelector("#s3 .scene-chip");
+
+/* ================= scene 4 stills + stages ================= */
+const s4cuts = [
+  { wrap: $("s4-a"), img: $("s4-img-a"), a: 21.2, b: 25.1, z0: 1.0,  z1: 1.06 },
+  { wrap: $("s4-b"), img: $("s4-img-b"), a: 25.1, b: 29.6, z0: 1.05, z1: 1.0 },
+  { wrap: $("s4-c"), img: $("s4-img-c"), a: 29.6, b: 35.9, z0: 1.0,  z1: 1.09 },
+];
+const stageEls = Array.from(document.querySelectorAll("#s4-stages .st"));
+// stage light-up times
+const stageOn = [22.6, 25.6, 28.6, 31.6, 33.8];
+const stageConf = [42, 61, 74, 88, 95];
+
+/* ================= scene 5 ================= */
+const elS5Chat = $("s5-chat");
+const elS5Shot = $("s5-shot");
+const elS5Botrow = $("s5-botrow");
+const elS5Typing = $("s5-typing");
+const elS5Verdict = $("s5-verdict");
+const elS5Graph = $("s5-graph");
+const elS5GraphImg = $("s5-img-graph");
+const elS5Chip = document.querySelector("#s5 .scene-chip");
+
+/* ================= scene 6 ================= */
+const layerCards = Array.from(document.querySelectorAll("#s6 .lc"));
+
+/* ================= scene 7 ================= */
+const elS7Shield = $("s7-shield");
+const elS7Title = $("s7-title");
+const elS7Tag = $("s7-tag");
+const elS7Hero = $("s7-hero");
+
+const vignette = $("vignette");
+
+/* ================= visibility helper ================= */
+function show(el, opacity, transform) {
+  if (opacity <= 0.001) {
+    el.style.visibility = "hidden";
+    el.style.opacity = "0";
+    return;
+  }
+  el.style.visibility = "visible";
+  el.style.opacity = String(opacity);
+  if (transform !== undefined) el.style.transform = transform;
+}
+
+/* ================= main seek ================= */
+function __seek(t) {
+  t = clamp(t, 0, 60);
+
+  /* ---- S1 hook ---- */
+  {
+    const a = sceneVis(t, W.s1[0], W.s1[1], 0.25, 0.4);
+    show(scenes.s1, a);
+    if (a > 0) {
+      const n = Math.floor(clamp((t - 0.35) * 42, 0, HOOK_TEXT.length));
+      elS1Type.textContent = HOOK_TEXT.slice(0, n);
+      // caret blinks only while typing, solid while settled
+      const typing = n < HOOK_TEXT.length && t > 0.35;
+      elS1Caret.style.opacity = typing
+        ? (Math.floor(t * 4) % 2 === 0 ? "1" : "0.15")
+        : (t > 2.4 ? "0" : "1");
+      // chip pulse: bright red while active
+      const pulse = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(t * 6.5));
+      elS1Dot.style.opacity = String(pulse);
+    }
+  }
+
+  /* ---- S2 reveal ---- */
+  {
+    const a = sceneVis(t, W.s2[0], W.s2[1], 0.35, 0.4);
+    show(scenes.s2, a);
+    if (a > 0) {
+      // shield
+      const sh = ease(range(t, 3.25, 3.85));
+      elS2Shield.style.opacity = String(sh);
+      elS2Shield.style.transform = `scale(${lerp(0.7, 1, sh)})`;
+      // words stagger
+      const wordStart = 3.55;
+      wordEls.forEach((el, i) => {
+        const st = wordStart + i * 0.16;
+        const p = ease(range(t, st, st + 0.45));
+        el.style.opacity = String(p);
+        el.style.transform = `translateY(${lerp(28, 0, p)}px)`;
+      });
+    }
+  }
+
+  /* ---- S3 fire drill ---- */
+  {
+    const a = sceneVis(t, W.s3[0], W.s3[1], 0.4, 0.4);
+    show(scenes.s3, a);
+    if (a > 0) {
+      s3chip.style.opacity = String(ease(range(t, 8.5, 9.0)));
+      // internal cuts with dip-to-bg
+      s3cuts.forEach((c, i) => {
+        const inCut = t >= c.a - 0.001 && t < c.b;
+        let vis = 0;
+        if (inCut) {
+          const fadeIn = i === 0 ? 1 : ease(range(t, c.a, c.a + 0.02));
+          const edge = 0.14;
+          let edgeA = fadeIn;
+          if (i > 0) edgeA *= cutDip(t, c.a, edge);
+          if (i < s3cuts.length - 1) edgeA *= cutDip(t, c.b, edge);
+          vis = edgeA;
+        }
+        show(c.wrap, vis);
+        if (vis > 0) {
+          const p = ease(range(t, c.a, c.b));
+          const z = lerp(c.z0, c.z1, p);
+          c.img.style.transform = `scale(${z.toFixed(4)})`;
+        }
+      });
+    } else {
+      s3cuts.forEach((c) => show(c.wrap, 0));
+    }
+  }
+
+  /* ---- S4 guardian ---- */
+  {
+    const a = sceneVis(t, W.s4[0], W.s4[1], 0.4, 0.4);
+    show(scenes.s4, a);
+    if (a > 0) {
+      // scene chip
+      const chipA = ease(range(t, 21.4, 22.0)) * (1 - ease(range(t, 35.3, 35.8)));
+      document.querySelector("#s4 .scene-chip").style.opacity = String(chipA);
+
+      s4cuts.forEach((c, i) => {
+        const inCut = t >= c.a - 0.001 && t < c.b;
+        let vis = 0;
+        if (inCut) {
+          const edge = 0.14;
+          let edgeA = 1;
+          if (i > 0) edgeA *= cutDip(t, c.a, edge);
+          if (i < s4cuts.length - 1) edgeA *= cutDip(t, c.b, edge);
+          vis = edgeA;
+        }
+        show(c.wrap, vis);
+        if (vis > 0) {
+          const p = ease(range(t, c.a, c.b));
+          c.img.style.transform = `scale(${lerp(c.z0, c.z1, p).toFixed(4)})`;
+        }
+      });
+
+      // stage chips
+      stageEls.forEach((el, i) => {
+        const st = stageOn[i];
+        const on = t >= st;
+        el.classList.toggle("on", on && i < 4 && t < 35.5);
+        el.classList.toggle("fire", i === 4 && on && t < 35.5);
+        // slide in progress
+        const p = ease(range(t, st, st + 0.35));
+        const baseY = on ? 0 : 10;
+        el.style.transform = `translateY(${lerp(10, baseY, p)}px)`;
+        el.style.opacity = on ? String(lerp(0.35, 1, p)) : "0.35";
+        // append live confidence once lit
+        if (on && i < 4) {
+          const c = Math.round(lerp(20, stageConf[i], ease(range(t, st, st + 1.2))));
+          el.textContent = `${i + 1} · ${["Hook","Authority","Isolation","Urgency","Payment"][i]}  ${c}%`;
+        } else if (i === 4 && on) {
+          el.textContent = `5 · Payment  ${Math.round(lerp(30, 95, ease(range(t, st, st + 1.0))))}%`;
+        } else {
+          el.textContent = `${i + 1} · ${["Hook","Authority","Isolation","Urgency","Payment"][i]}`;
+        }
+      });
+    } else {
+      s4cuts.forEach((c) => show(c.wrap, 0));
+    }
+  }
+
+  /* ---- S5 bot + graph ---- */
+  {
+    const a = sceneVis(t, W.s5[0], W.s5[1], 0.4, 0.4);
+    show(scenes.s5, a);
+    if (a > 0) {
+      // phase A: chat forward (36.3 – 40.0)
+      // shot flies in from left
+      const shotP = easeOut(range(t, 36.4, 37.1));
+      const shotOut = 1 - ease(range(t, 39.6, 40.0));
+      const shotA = shotP * shotOut;
+      elS5Shot.style.opacity = String(shotA);
+      elS5Shot.style.transform = `translateX(${lerp(-120, 0, shotP)}px) scale(${lerp(0.9, 1, shotP)})`;
+
+      // bot row appears after shot lands
+      const botP = ease(range(t, 37.2, 37.6)) * shotOut;
+      elS5Botrow.style.opacity = String(botP);
+      elS5Botrow.style.transform = `translateY(${lerp(16, 0, botP)}px)`;
+
+      // typing dots visible 37.6 – 39.2
+      const typingVis = t > 37.6 && t < 39.2 ? 1 : 0;
+      elS5Typing.style.opacity = String(typingVis * botP);
+
+      // chat container fades out as verdict arrives
+      const chatA = (1 - ease(range(t, 39.5, 40.0))) * ease(range(t, 36.3, 36.6));
+      elS5Chat.style.opacity = String(chatA);
+      elS5Chat.style.visibility = chatA > 0.01 ? "visible" : "hidden";
+
+      // phase B: verdict card (39.6 – 43.2)
+      const vP = easeOut(range(t, 39.6, 40.1));
+      const vOut = ease(range(t, 42.9, 43.35));
+      const vA = vP * (1 - vOut);
+      elS5Verdict.style.opacity = String(vA);
+      elS5Verdict.style.transform = `translateY(${lerp(26, 0, vP)}px) scale(${lerp(0.98, 1, vP)})`;
+
+      // chip hidden during graph
+      const chipA = ease(range(t, 36.3, 36.8)) * (1 - ease(range(t, 42.9, 43.3)));
+      elS5Chip.style.opacity = String(chipA);
+
+      // phase C: graph (43.2 – 47.0)
+      const gIn = ease(range(t, 43.2, 43.7));
+      const gP = ease(range(t, 43.2, 47.0));
+      show(elS5Graph, gIn);
+      if (gIn > 0) {
+        elS5GraphImg.style.transform = `scale(${lerp(1.0, 1.08, gP).toFixed(4)})`;
+        // small veil during entry
+        elS5Graph.querySelector(".veil").style.opacity = String(1 - gIn);
+      }
+    } else {
+      elS5Chat.style.visibility = "hidden";
+      elS5Verdict.style.opacity = "0";
+      show(elS5Graph, 0);
+    }
+  }
+
+  /* ---- S6 four layers ---- */
+  {
+    const a = sceneVis(t, W.s6[0], W.s6[1], 0.35, 0.4);
+    show(scenes.s6, a);
+    if (a > 0) {
+      layerCards.forEach((el, i) => {
+        const st = 47.25 + i * 0.55;
+        const p = easeOut(range(t, st, st + 0.55));
+        el.style.opacity = String(p);
+        el.style.transform = `translateX(${lerp(80, 0, p)}px)`;
+      });
+    }
+  }
+
+  /* ---- S7 outro ---- */
+  {
+    const a = sceneVis(t, W.s7[0], W.s7[1], 0.4, 0.5);
+    show(scenes.s7, a);
+    if (a > 0) {
+      const sh = easeOut(range(t, 55.2, 55.75));
+      elS7Shield.style.opacity = String(sh);
+      elS7Shield.style.transform = `scale(${lerp(0.7, 1, sh)})`;
+      const ti = easeOut(range(t, 55.45, 56.0));
+      elS7Title.style.opacity = String(ti);
+      elS7Title.style.transform = `translateY(${lerp(30, 0, ti)}px)`;
+      const tg = easeOut(range(t, 55.75, 56.3));
+      elS7Tag.style.opacity = String(tg);
+      elS7Tag.style.transform = `translateY(${lerp(20, 0, tg)}px)`;
+      const he = ease(range(t, 56.3, 56.9));
+      elS7Hero.style.opacity = String(he * 0.9);
+    }
+  }
+
+  /* ---- vignette: on during stills scenes for depth ---- */
+  const vig =
+    sceneVis(t, W.s3[0], W.s3[1], 0.4, 0.4) * 0.5 +
+    sceneVis(t, W.s4[0], W.s4[1], 0.4, 0.4) * 0.5 +
+    sceneVis(t, W.s5[0], 43.2, 0.4, 0.3) * 0.35;
+  vignette.style.opacity = String(clamp(vig, 0, 1));
+}
+
+/* expose for the renderer */
+window.__seek = __seek;
+window.__ready = false;
+
+/* preload images then mark ready */
+(async function preload() {
+  const urls = Array.from(document.images).map((i) => i.src);
+  await Promise.all(
+    urls.map(
+      (u) =>
+        new Promise((res) => {
+          const im = new Image();
+          im.onload = im.onerror = res;
+          im.src = u;
+        })
+    )
+  );
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  __seek(0);
+  window.__ready = true;
+})();
+</script>
+</body>
+</html>

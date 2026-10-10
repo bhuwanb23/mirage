@@ -1,0 +1,17 @@
+Mirage — The Scam Vaccine
+
+Don't detect scams. Vaccinate people against them.
+
+A 60-second look at how Mirage turns ordinary people into the first line of defense:
+
+• Scam Fire Drills — personalized simulated attacks (bank KYC, fake parcel, OTP, fake job) built from your exposure profile. You fail in the drill so you don't fail for real. Every drill ends in a debrief and a Resilience Score.
+
+• Live Call Guardian — real-time 5-stage pipeline detection on live calls: Hook → Authority → Isolation → Urgency → Payment. Plus a Memory Handshake only your family can answer.
+
+• Scammer Hunter — an AI honeypot eats scam bait, extracts IOCs, and lights up a Neo4j Scam Graph as a weather map of active fraud.
+
+• Zero-install Bot — forward a text, a voice note, or a screenshot to Telegram. Get a verdict and red flags in seconds — no app to install.
+
+The scam call that used to work on your parents now gets caught live, stage by stage — and the whole family learns from the debrief.
+
+Mirage. The scam vaccine.
