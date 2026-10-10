@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:3000"
 
+    # ---- Memory Handshake (Phase 4) ----
+    # Optional server-side pepper for SHA-256 answer hashing.
+    memory_hash_pepper: str = ""
+
     # ---- Service metadata ----
     service_name: str = "mirage-api"
     version: str = "0.1.0"

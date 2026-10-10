@@ -228,6 +228,65 @@ class MemorySecret(BaseModel):
     totp_code: Optional[str] = None
 
 
+# --- Memory Handshake API (Phase 4.5) ------------------------------------
+class FamilyGroupCreate(BaseModel):
+    name: Optional[str] = "Family"
+    user_id: Optional[UUID] = None
+
+
+class FamilyGroupJoin(BaseModel):
+    invite_code: str
+
+
+class FamilyGroupOut(BaseModel):
+    family_group_id: str
+    invite_code: str
+
+
+class MemoryQuestionIn(BaseModel):
+    question: str
+    answer: str
+
+
+class MemorySetupRequest(BaseModel):
+    family_group_id: str
+    questions: list[MemoryQuestionIn]
+
+
+class MemorySetupResponse(BaseModel):
+    status: str = "saved"
+    questions_count: int = 0
+    totp_secret: str = ""
+    message: str = ""
+
+
+class MemoryVerifyRequest(BaseModel):
+    family_group_id: str
+    question_id: str
+    answer: str
+
+
+class TotpVerifyRequest(BaseModel):
+    family_group_id: str
+    code: str
+
+
+class MemoryVerifyResponse(BaseModel):
+    verified: bool
+    message: str
+
+
+class TOTPResponse(BaseModel):
+    code: str
+    expires_in_seconds: int
+    interval: int
+
+
+class ChallengeQuestion(BaseModel):
+    question_id: str
+    question: str
+
+
 # ----------------------------------------------------------------------------
 # Health (Phase 0)
 # ----------------------------------------------------------------------------

@@ -79,8 +79,10 @@ def analyze_voice(source, language: Optional[str] = None) -> VoiceAnalysisVerdic
         else:
             transcript, segments = _no_transcription()
 
-        # Step 3: classify transcript
-        if transcript.strip():
+        # Step 3: classify transcript. The "No speech detected in audio"
+        # placeholder from _no_transcription() is not user speech - never
+        # feed it to the classifier (it would LLM-classify the placeholder).
+        if whisper_ok and transcript.strip():
             text_verdict = analyze_text(transcript, sender_info=None)
         else:
             text_verdict = _no_speech_verdict()

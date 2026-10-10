@@ -81,6 +81,12 @@ def create_app() -> FastAPI:
 
     app.include_router(analyze.router, prefix="/analyze")
 
+    # Phase 4 — Live Guardian + Memory Handshake
+    from app.routers import guardian, memory
+
+    app.include_router(memory.router, prefix="/memory")
+    app.include_router(guardian.router)
+
     return app
 
 
