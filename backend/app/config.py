@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:3000"
 
+    # ---- Fire Drill (Phase 3) ----
+    drill_media_dir: str = "media/drill"  # generated drill audio + uploaded voice clips
+    f5tts_api_url: str = ""  # optional ngrok/Colab endpoint for real voice cloning
+
     # ---- Service metadata ----
     service_name: str = "mirage-api"
     version: str = "0.1.0"
