@@ -429,7 +429,8 @@ class ReportResponse(BaseModel):
     helpline_script: str
     urgent: bool = False
 
-# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
 # Health (Phase 0)
 # ----------------------------------------------------------------------------
 class AnalyzeResponse(BaseModel):
@@ -443,3 +444,145 @@ class HealthCheck(BaseModel):
     version: str = "0.1.0"
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     providers: dict[str, Any] = {}
+
+
+# ---------------------------------------------------------------------------
+# Fire Drill (Phase 3)
+# ---------------------------------------------------------------------------
+
+STAGE_ORDER = ["hook", "authority", "isolation", "urgency", "payment"]
+
+
+class DrillProfileRequest(BaseModel):
+    name: str
+    city: Optional[str] = None
+    bank: Optional[str] = None
+    employer: Optional[str] = None
+    relative_name: Optional[str] = None
+    relative_relation: Optional[str] = None
+    language: str = "en"
+    user_id: Optional[str] = None  # client-generated uuid, persisted in localStorage
+
+
+class DrillProfileOut(BaseModel):
+    profile_id: str
+    user_id: str
+    name: str
+    first_name: str
+    city: str
+    bank: str
+    bank_full_name: str
+    employer: Optional[str] = None
+    relative_name: Optional[str] = None
+    relative_relation: Optional[str] = None
+    language: str = "en"
+    voice_clip_url: Optional[str] = None
+    voice_duration_seconds: float = 0.0
+    status: str = "saved"
+    message: str = "Profile saved. Upload a voice clip to continue."
+
+
+class DrillStage(BaseModel):
+    stage: str
+    order: int
+    timestamp_hint: str = ""
+    start_seconds: float = 0.0
+    end_seconds: float = 0.0
+    script: str = ""
+    tactic: str = ""
+
+
+class DrillScriptOut(BaseModel):
+    script_id: str
+    profile_id: str
+    scam_type: str
+    title: str
+    full_script: str
+    stages: list[DrillStage]
+    red_flags_planted: list[str] = []
+    difficulty_level: str = "medium"
+    estimated_duration_seconds: float = 60.0
+    language: str = "en"
+    source: str = "llm"  # llm | template
+
+
+class DrillScriptRequest(BaseModel):
+    profile_id: str
+    scam_type: str
+    difficulty: str = "medium"
+
+
+class DrillSynthesizeRequest(BaseModel):
+    script_id: str
+    method: str = "auto"  # auto | edge-tts | f5tts
+
+
+class DrillSynthesizeOut(BaseModel):
+    script_id: str
+    audio_url: Optional[str] = None
+    duration_seconds: float = 0.0
+    method_used: str = "edge-tts"
+    status: str = "ready"  # ready | failed
+    message: str = ""
+
+
+class DrillRespondRequest(BaseModel):
+    script_id: str
+    user_action: str = "identified_scam"  # identified_scam | fell_for_it | no_response
+    reaction_time_seconds: float = 0.0
+    audio_position_seconds: float = 0.0
+
+
+class DebriefStageDetail(BaseModel):
+    stage: str
+    timestamp: str = ""
+    what_happened: str = ""
+    why_it_works: str = ""
+    real_world_tip: str = ""
+
+
+class DrillDebrief(BaseModel):
+    outcome: str = "success"  # success | partial | failed
+    headline: str = ""
+    reaction_assessment: str = ""
+    stages_caught: list[DebriefStageDetail] = []
+    stages_missed: list[DebriefStageDetail] = []
+    key_lesson: str = ""
+    real_world_action: str = ""
+    encouragement: str = ""
+
+
+class DrillRespondOut(BaseModel):
+    drill_id: str
+    script_id: str
+    scam_type: str
+    user_action: str
+    reaction_time_seconds: float
+    stages_caught: list[str]
+    stages_missed: list[str]
+    trigger_stage: Optional[str] = None
+    drill_score: int
+    score_before: int
+    score_after: int
+    change: int
+    label: str
+    debrief: DrillDebrief
+
+
+class ScoreHistoryEntry(BaseModel):
+    drill_number: int
+    score: int
+    scam_type: str
+    date: str
+
+
+class DrillScoreOut(BaseModel):
+    user_id: str
+    current_score: int
+    previous_score: int
+    change: int
+    label: str
+    drills_completed: int
+    best_reaction_time: Optional[float] = None
+    weakest_scam_type: Optional[str] = None
+    history: list[ScoreHistoryEntry] = []

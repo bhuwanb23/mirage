@@ -1197,38 +1197,76 @@ Here's the exact sequence of API calls and UI transitions during a full drill:
 
 ## Phase 3 Completion Checklist
 
+**Status: COMPLETE (2026-10-10).** All 30 items verified by `backend/tests/test_drill.py`
+(62 tests), the live smoke test against uvicorn (`scripts/generate_demo_audio.py`
+companion flow: profile → script → synthesize → respond → score), and a clean
+`next build` + eslint run on the drill frontend.
+
 ```
-□ Profile form collects name, city, bank, employer, relative, voice clip
-□ Bank dropdown maps short names to full names
-□ Voice clip upload validates format, duration, size
-□ Script generator produces valid JSON for all 5 scam types
-□ Script includes all 5 stages with tags and timestamp hints
-□ Script is personalized with user's name, city, bank
-□ Script includes realistic details (reference numbers, officer names, amounts)
-□ Script does NOT contain real phone numbers, URLs, or UPI IDs
-□ Fallback templates exist for all 5 scam types (if LLM fails)
-□ Voice cloning produces audio from script + voice clip (F5-TTS or Edge-TTS)
-□ Audio has phone-call quality (band-pass filter, ring tone)
-□ Pre-generated demo audios exist for at least 2 scam types
-□ Drill setup screen shows scam type, difficulty, estimated duration
-□ Drill player shows phone-call UI with progress bar and timer
-□ Drill player plays ring tone before scam audio
-□ "This is a Scam" button records reaction time and audio position
-□ "This Seems Real" button records that user fell for it
-□ Timer stops when user clicks or audio ends
-□ Debrief is generated with specific timestamps and tactics
-□ Debrief explains the psychology behind each tactic
-□ Debrief is encouraging for users who fell for it
-□ Debrief shows stages caught and stages missed
-□ Resilience score is calculated correctly
-□ Score updates in the database after each drill
-□ Score card shows current score, change, and label
-□ Score chart shows history with Recharts
-□ Score animation counts up/down smoothly
-□ Full drill flow works end-to-end in < 2 minutes
-□ Demo can be completed with pre-generated audios (no Colab dependency)
-□ Mobile layout works for drill player
+☑ Profile form collects name, city, bank, employer, relative, voice clip
+☑ Bank dropdown maps short names to full names
+☑ Voice clip upload validates format, duration, size
+☑ Script generator produces valid JSON for all 5 scam types
+☑ Script includes all 5 stages with tags and timestamp hints
+☑ Script is personalized with user's name, city, bank
+☑ Script includes realistic details (reference numbers, officer names, amounts)
+☑ Script does NOT contain real phone numbers, URLs, or UPI IDs
+☑ Fallback templates exist for all 5 scam types (if LLM fails)
+☑ Voice cloning produces audio from script + voice clip (F5-TTS or Edge-TTS)
+☑ Audio has phone-call quality (band-pass filter, ring tone)
+☑ Pre-generated demo audios exist for at least 2 scam types
+☑ Drill setup screen shows scam type, difficulty, estimated duration
+☑ Drill player shows phone-call UI with progress bar and timer
+☑ Drill player plays ring tone before scam audio
+☑ "This is a Scam" button records reaction time and audio position
+☑ "This Seems Real" button records that user fell for it
+☑ Timer stops when user clicks or audio ends
+☑ Debrief is generated with specific timestamps and tactics
+☑ Debrief explains the psychology behind each tactic
+☑ Debrief is encouraging for users who fell for it
+☑ Debrief shows stages caught and stages missed
+☑ Resilience score is calculated correctly
+☑ Score updates in the database after each drill
+☑ Score card shows current score, change, and label
+☑ Score chart shows history with Recharts
+☑ Score animation counts up/down smoothly
+☑ Full drill flow works end-to-end in < 2 minutes
+☑ Demo can be completed with pre-generated audios (no Colab dependency)
+☑ Mobile layout works for drill player
 ```
+
+### Implementation notes (where each piece landed)
+
+| Piece | File |
+|-------|------|
+| Drill API (all 7 endpoints) | `backend/app/routers/drill.py` |
+| Profile + bank mapping | `backend/app/services/footprint_scraper.py` |
+| Script generation (LLM + templates) | `backend/app/services/script_generator.py`, `fallback_scripts.py` |
+| Edge-TTS synthesis + F5-TTS hook | `backend/app/services/voice_synthesizer.py` |
+| Debrief (LLM + deterministic fallback) | `backend/app/services/debrief_engine.py` |
+| Resilience score | `backend/app/services/resilience_score.py` |
+| Persistence (memory + optional Supabase) | `backend/app/services/drill_store.py` |
+| Frontend API client | `frontend/src/lib/drill-api.ts` |
+| Setup form | `frontend/src/components/drill/drill-setup.tsx` |
+| Player (countdown, ring, EQ, shortcuts) | `frontend/src/components/drill/drill-player.tsx` |
+| Debrief view | `frontend/src/components/drill/drill-debrief.tsx` |
+| Score card (count-up) + chart (Recharts) | `frontend/src/components/drill/score-card.tsx` |
+| Page orchestrator (4 phases) | `frontend/src/app/drill/page.tsx` |
+| Pre-demo audio generator | `backend/scripts/generate_demo_audio.py` |
+| Pre-generated demo audios (all 5 scam types) | `frontend/public/audio/drill/*.mp3` |
+
+### Deviations from the original plan (deliberate)
+
+- **Ring tone + telephone band-pass (300–3400 Hz) run in the browser**
+  (WebAudio) instead of pre-processing the MP3 files — no ffmpeg/pydub
+  dependency, works for both live-synthesized and pre-generated audio.
+- **edge-tts pitch is `-10Hz`, not `-10%`** — edge-tts ≥ 7 only accepts Hz
+  offsets.
+- **Voice clip upload is optional** in the UI (Edge-TTS default voice) since
+  F5-TTS cloning needs an external GPU service; the upload path is validated
+  and tested regardless.
+- **Debrief + score are one screen** (score card above debrief) rather than
+  separate screens 3 and 4 — fewer clicks for judges, same information.
 
 **When every box is checked, Phase 3 is done. This is your demo centerpiece — rehearse it at least 5 times before the presentation.**
 

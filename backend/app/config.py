@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:3000"
 
+    # ---- Fire Drill (Phase 3) ----
+    drill_media_dir: str = "media/drill"  # generated drill audio + uploaded voice clips
+    f5tts_api_url: str = ""  # optional ngrok/Colab endpoint for real voice cloning
+
     # ---- Scam graph (Phase 5) ----
     # SQLite fallback path used when NEO4J_URI is not configured.
     graph_db_path: str = "data/scam_graph.db"

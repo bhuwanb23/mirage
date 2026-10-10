@@ -8,9 +8,11 @@ from __future__ import annotations
 import logging
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.routers import health
@@ -77,9 +79,15 @@ def create_app() -> FastAPI:
         return response
 
     app.include_router(health.router)
-    from app.routers import analyze
+    from app.routers import analyze, drill
 
     app.include_router(analyze.router, prefix="/analyze")
+    app.include_router(drill.router, prefix="/drill")
+
+    # static media: generated drill audio + uploaded voice clips (Phase 3)
+    media_dir = Path(settings.drill_media_dir)
+    media_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/media/drill", StaticFiles(directory=media_dir), name="drill_media")
 
     # Phase 4 — Live Guardian + Memory Handshake
     from app.routers import guardian, memory
