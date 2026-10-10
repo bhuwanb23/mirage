@@ -87,6 +87,12 @@ def create_app() -> FastAPI:
     app.include_router(memory.router, prefix="/memory")
     app.include_router(guardian.router)
 
+    # Phase 5 — Scammer Hunter + Scam Graph
+    from app.routers import graph, honeypot
+
+    app.include_router(honeypot.router)
+    app.include_router(graph.router)
+
     return app
 
 

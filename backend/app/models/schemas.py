@@ -288,6 +288,152 @@ class ChallengeQuestion(BaseModel):
 
 
 # ----------------------------------------------------------------------------
+# Scammer Hunter (Phase 5)
+# ----------------------------------------------------------------------------
+class IOCItem(BaseModel):
+    value: str
+    source: str = "regex"  # regex | llm | agent | url_parse
+    context: str = ""
+
+
+class ThreatIOCs(BaseModel):
+    phone_numbers: list[IOCItem] = []
+    upi_ids: list[IOCItem] = []
+    urls: list[IOCItem] = []
+    domains: list[IOCItem] = []
+    bank_accounts: list[IOCItem] = []
+    ifsc_codes: list[IOCItem] = []
+    bank_names: list[str] = []
+    scammer_names: list[str] = []
+    reference_numbers: list[str] = []
+    amounts: list[str] = []
+    locations: list[str] = []
+
+    def total(self) -> int:
+        return (
+            len(self.phone_numbers)
+            + len(self.upi_ids)
+            + len(self.urls)
+            + len(self.bank_accounts)
+        )
+
+
+class HoneypotStartRequest(BaseModel):
+    scammer_message: str
+    session_id: Optional[str] = None
+    persona: str = "ramesh"
+    mode: str = "live"  # live | simulate
+
+
+class HoneypotContinueRequest(BaseModel):
+    session_id: str
+    scammer_message: str
+    mode: Optional[str] = None  # inherit session default
+
+
+class HoneypotTurnResponse(BaseModel):
+    session_id: str
+    reply: str
+    tactic_used: str
+    iocs_extracted_this_turn: dict[str, list[str]] = {}
+    total_iocs_extracted: int = 0
+    conversation_health: str = "engaged"
+    messages_in_session: int = 0
+    estimated_time_wasted_seconds: int = 0
+    mode: str = "live"
+
+
+class HoneypotMessage(BaseModel):
+    role: str  # scammer | ramesh (persona)
+    text: str
+    tactic: Optional[str] = None
+    health: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class HoneypotSessionOut(BaseModel):
+    session_id: str
+    persona: str
+    mode: str
+    conversation_health: str
+    messages: list[HoneypotMessage] = []
+    iocs: ThreatIOCs = Field(default_factory=ThreatIOCs)
+    total_time_wasted_seconds: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class GraphNode(BaseModel):
+    id: str
+    label: str
+    type: str
+    group: int = 0
+    report_count: int = 1
+    in_ring: bool = False
+    properties: dict[str, Any] = {}
+
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+    type: str
+
+
+class GraphData(BaseModel):
+    nodes: list[GraphNode] = []
+    edges: list[GraphEdge] = []
+    truncated: bool = False
+
+
+class GraphStats(BaseModel):
+    phone_numbers: int = 0
+    upi_ids: int = 0
+    domains: int = 0
+    bank_accounts: int = 0
+    scam_reports: int = 0
+    rings: int = 0
+    scam_type_counts: dict[str, int] = {}
+    backend: str = "sqlite"  # sqlite | neo4j
+
+
+class MapCity(BaseModel):
+    city: str
+    lat: float
+    lng: float
+    scam_count: int
+    top_type: str
+    intensity: float
+    trend: str = "stable"
+
+
+class MapHeatmap(BaseModel):
+    cities: list[MapCity] = []
+    national_stats: dict[str, Any] = {}
+
+
+class ReportRequest(BaseModel):
+    user_name: Optional[str] = None
+    user_phone: Optional[str] = None
+    user_city: Optional[str] = None
+    user_email: Optional[str] = None
+    scam_type: Optional[str] = None
+    mode_of_contact: Optional[str] = None  # phone | whatsapp | sms | email | website
+    incident_date: Optional[str] = None
+    incident_time: Optional[str] = None
+    amount_demanded: Optional[str] = None
+    amount_lost: Optional[float] = 0
+    transaction_ref: Optional[str] = None
+    anonymous: bool = False
+    honeypot_session_id: Optional[str] = None  # prefill IOCs from a honeypot session
+    iocs: ThreatIOCs = Field(default_factory=ThreatIOCs)
+
+
+class ReportResponse(BaseModel):
+    report_id: str
+    report_text: str
+    helpline_script: str
+    urgent: bool = False
+
+# ----------------------------------------------------------------------------
 # Health (Phase 0)
 # ----------------------------------------------------------------------------
 class AnalyzeResponse(BaseModel):

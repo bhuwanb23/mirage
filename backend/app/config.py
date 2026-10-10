@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:3000"
 
+    # ---- Scam graph (Phase 5) ----
+    # SQLite fallback path used when NEO4J_URI is not configured.
+    graph_db_path: str = "data/scam_graph.db"
+
     # ---- Memory Handshake (Phase 4) ----
     # Optional server-side pepper for SHA-256 answer hashing.
     memory_hash_pepper: str = ""
