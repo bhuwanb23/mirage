@@ -54,7 +54,7 @@ export default function Home() {
       <section className="max-w-3xl">
         <Badge className="mb-4 gap-1.5" variant="secondary">
           <CheckCircle2 className="h-3 w-3" aria-hidden />
-          Phase 0 · foundation
+          v0.1 · open source
         </Badge>
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
           Don&apos;t detect scams.
