@@ -204,13 +204,9 @@ class VoiceAnalysisVerdict(BaseModel):
     whisper_available: bool = False
 
 
-class ThreatIOCs(BaseModel):
-    phone_numbers: list[str] = []
-    upi_ids: list[str] = []
-    urls: list[str] = []
-    domains: list[DomainInfo] = []
-    bank_accounts: list[str] = []
-    email_addresses: list[str] = []
+# Note: the Phase 0/2-era ThreatIOCs stub (str lists + DomainInfo) was removed
+# in Phase 5 — ThreatIOCs below (IOCItem-based, with source + context) is the
+# single IOC contract used by the extractor, honeypot, graph, and report.
 
 
 # ----------------------------------------------------------------------------

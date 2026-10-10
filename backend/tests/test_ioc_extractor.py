@@ -8,7 +8,6 @@ from unittest.mock import patch
 from app.models.schemas import IOCItem, ThreatIOCs
 from app.services import ioc_extractor
 
-
 MESSAGE = (
     "Good afternoon, this is Officer Rajesh from SBI. Your KYC is incomplete. "
     "Transfer ₹50,000 to sbi-safe@ybl immediately, or call me on 98765 43211. "
