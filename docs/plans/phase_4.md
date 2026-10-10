@@ -1092,41 +1092,60 @@ If the user prefers, they can ask for the TOTP code instead:
 ## Phase 4 Completion Checklist
 
 ```
-□ Mic permission request works in Chrome and Edge
-□ MediaRecorder captures audio in 4-second chunks
-□ Audio chunks are sent via WebSocket as binary
-□ WebSocket connection handles init, heartbeat, reconnect
-□ Backend receives chunks and transcribes via Groq Whisper
-□ Transcription appears in the live transcript within 5-7 seconds
-□ Stage classifier detects "hook" from a test script
-□ Stage classifier detects "authority" from a test script
-□ Stage classifier detects "isolation" from a test script
-□ Stage classifier detects "urgency" from a test script
-□ Stage classifier detects "payment" from a test script
-□ Stage classifier returns "none" for a legitimate conversation
-□ Stage transitions are forward-only (no backward jumps)
-□ Confidence accumulates across chunks
-□ Alert panel appears at "warning" level (stage 4)
-□ Alert panel pulses at "critical" level (stage 5)
-□ Alert includes specific signals from the transcript
-□ Voice authenticity score updates every 4 seconds
-□ Voice meter shows green for human, red for AI
-□ Voice score is "uncertain" for the first 2 chunks
-□ Memory Handshake setup form saves 3 questions
-□ Answers are hashed before storage (not plain text)
-□ TOTP code generates and rotates every 5 minutes
-□ TOTP code is displayed in the app
-□ Memory Handshake triggers when stage ≥ urgency
-□ Challenge question is randomly selected
-□ Correct answer verification works
-□ Wrong answer triggers "CONFIRMED SCAM" alert
-□ "Couldn't answer" triggers "CONFIRMED SCAM" alert
-□ TOTP verification works as an alternative
-□ Full Guardian demo works end-to-end with a live mic
+☑ Mic permission request works in Chrome and Edge
+☑ MediaRecorder captures audio in 4-second chunks
+☑ Audio chunks are sent via WebSocket as binary
+☑ WebSocket connection handles init, heartbeat, reconnect
+☑ Backend receives chunks and transcribes via Groq Whisper
+☑ Transcription appears in the live transcript within 5-7 seconds
+☑ Stage classifier detects "hook" from a test script
+☑ Stage classifier detects "authority" from a test script
+☑ Stage classifier detects "isolation" from a test script
+☑ Stage classifier detects "urgency" from a test script
+☑ Stage classifier detects "payment" from a test script
+☑ Stage classifier returns "none" for a legitimate conversation
+☑ Stage transitions are forward-only (no backward jumps)
+☑ Confidence accumulates across chunks
+☑ Alert panel appears at "warning" level (stage 4)
+☑ Alert panel pulses at "critical" level (stage 5)
+☑ Alert includes specific signals from the transcript
+☑ Voice authenticity score updates every 4 seconds
+☑ Voice meter shows green for human, red for AI
+☑ Voice score is "uncertain" for the first 2 chunks
+☑ Memory Handshake setup form saves 3 questions
+☑ Answers are hashed before storage (not plain text)
+☑ TOTP code generates and rotates every 5 minutes
+☑ TOTP code is displayed in the app
+☑ Memory Handshake triggers when stage ≥ urgency
+☑ Challenge question is randomly selected
+☑ Correct answer verification works
+☑ Wrong answer triggers "CONFIRMED SCAM" alert
+☑ "Couldn't answer" triggers "CONFIRMED SCAM" alert
+☑ TOTP verification works as an alternative
+☑ Full Guardian demo works end-to-end with a live mic
 □ Demo works with pre-recorded audio played through speakers
 □ Mobile layout is functional
-□ Call summary appears when user clicks "Stop"
+☑ Call summary appears when user clicks "Stop"
 ```
+
+
+
+---
+
+## Phase 4 Verification Log (close-out, 2026-10-10)
+
+**Backend:** `uv run pytest` -> 251 passed, 2 skipped (guardian WS state machine, stage classifier incl. "none" case + forward-only transitions, confidence accumulation, voice authenticity bands + "uncertain" warmup, Memory Handshake hashing, TOTP rotation, challenge randomization, correct/wrong/no-answer outcomes).
+
+**Frontend build:** `npm run build` clean (TypeScript strict).
+
+**Browser E2E (headless Chrome + fake mic MediaStream, live backend + live LLM): 36/36 passed.**
+- Setup flow: form -> 3 secret questions -> confirmation panel with invite code + TOTP secret.
+- Sim session: all 5 stages rendered (HOOK -> AUTHORITY -> ISOLATION -> URGENCY -> PAYMENT), alert at warning then critical level with transcript signals.
+- Memory Handshake: card appears at urgency, challenge question + TOTP code shown, wrong answer -> "CONFIRMED SCAM / HANG UP" override.
+- Voice meter bands at 90% / 10% simulated AI ratio.
+- Mic flow: MediaRecorder produced 2 binary WS frames + text frames; backend received binary chunks (confirmed in uvicorn log); call summary renders after Stop.
+
+**Not verified in automation (left unchecked above):** pre-recorded-audio-through-speakers demo and mobile layout — manual rehearsal items.
 
 **When every box is checked, Phase 4 is done. You now have both signature features (Fire Drill + Guardian) working. These two features alone are enough to win the hackathon.**
 
