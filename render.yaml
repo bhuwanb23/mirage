@@ -33,22 +33,25 @@ services:
       - key: GEMINI_API_KEY
         sync: false
 
+  # Node web service (SSR). Free compute is not always offered for every
+  # workspace/service via Blueprint — use starter (0.5 CPU / 512 MB).
   - type: web
     name: mirage-web
     runtime: node
     rootDir: frontend
-    plan: free
+    plan: starter
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://mirage-api.onrender.com
 
+  # Workers have no free plan — starter is the cheapest valid option.
   - type: worker
     name: mirage-bot
     runtime: python
     rootDir: bot
-    plan: free
+    plan: starter
     buildCommand: pip install uv && uv sync --frozen
     startCommand: uv run python main.py
     envVars:
