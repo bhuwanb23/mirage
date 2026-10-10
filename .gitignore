@@ -34,3 +34,6 @@ Thumbs.db
 *.m4a
 !ml/**/*.ipynb
 backend/scripts/*_out.*
+.graphify_detect.json
+.graphify_python
+.graphify_root
