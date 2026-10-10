@@ -1,8 +1,11 @@
 """Environment-driven configuration.
 
 Rules:
-- development: missing keys are logged as warnings, app still boots (so /health works).
-- production: required keys are validated at startup and the app crashes loudly.
+- Missing optional provider keys are always logged as warnings; the app still boots
+  so /health and soft-init clients work (needed on free-tier deploys before secrets
+  are filled in the host dashboard).
+- Set ENVIRONMENT=production once GROQ/Supabase/Neo4j are configured; missing keys
+  then log at ERROR but still do not block boot (providers degrade gracefully).
 """
 
 from __future__ import annotations
@@ -110,17 +113,14 @@ class Settings(BaseSettings):
         return [k for k in _PRODUCTION_REQUIRED if not getattr(self, k.lower(), "")]
 
     def validate_startup(self) -> None:
-        """Crash loudly in production; warn in development."""
+        """Log missing keys; never block boot (soft-init for free-tier / partial secrets)."""
         missing = self.missing_production_keys()
-        if self.is_production and missing:
-            raise RuntimeError(
-                f"Missing required env vars for production: {', '.join(missing)}"
-            )
         if missing:
-            logger.warning(
-                "Missing optional env vars (fine in development): %s",
-                ", ".join(missing),
-            )
+            msg = "Missing env vars (providers will degrade): %s"
+            if self.is_production:
+                logger.error(msg, ", ".join(missing))
+            else:
+                logger.warning(msg, ", ".join(missing))
         logger.info(
             "LLM providers available: %s (provider=%s)",
             ", ".join(self.available_llm_providers) or "none",
