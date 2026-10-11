@@ -5,6 +5,10 @@
 # Free compute is only available for web services (and static sites).
 # Background workers require a paid plan — run the Telegram bot locally instead:
 #   cd bot && uv sync && uv run python main.py
+#
+# Minimum secrets for a useful Render demo:
+#   GEMINI_API_KEY or GROQ_API_KEY, SUPABASE_URL + SUPABASE_ANON_KEY (optional),
+#   NEO4J_URI + NEO4J_PASSWORD (optional — SQLite graph fallback otherwise)
 
 services:
   - type: web
@@ -16,8 +20,8 @@ services:
     startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
-      # development = boot without secrets (warnings only).
-      # Set to production in the dashboard once GROQ/Supabase/Neo4j are filled in.
+      # Soft-init: missing keys warn/log but do not crash boot.
+      # Flip to production in the dashboard once secrets are filled.
       - key: ENVIRONMENT
         value: development
       - key: OLLAMA_MODEL
@@ -28,11 +32,9 @@ services:
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
       - key: NEO4J_URI
         sync: false
-      - key: NEO4J_USER
+      - key: NEO4J_USERNAME
         value: neo4j
       - key: NEO4J_PASSWORD
         sync: false

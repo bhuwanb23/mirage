@@ -19,15 +19,16 @@ Conventions: JSON in/out · `Content-Type: application/json` · errors return
 ```jsonc
 // 200
 {
-  "status": "ok",
+  "status": "healthy",
   "service": "mirage-api",
   "version": "0.1.0",
   "timestamp": "2026-10-09T02:00:00Z",
   "providers": {
     "configured": "ollama",       // active LLM provider, or null
     "available": ["ollama"],      // providers that could be used
-    "supabase": false,            // client initialized?
+    "supabase": false,            // live client initialized?
     "neo4j": false,
+    "graph_backend": "sqlite",    // neo4j | sqlite
     "environment": "development"
   }
 }
@@ -35,9 +36,13 @@ Conventions: JSON in/out · `Content-Type: application/json` · errors return
 
 ---
 
-## Text & media analysis (Phase 2)
+## Text & media analysis (Phase 1–2)
 
-### 📋 `POST /analyze/text`
+### ✅ `GET /analyze/recent?limit=5`
+
+In-memory ring buffer of recent analyze events for the dashboard activity feed.
+
+### ✅ `POST /analyze/text`
 
 ```jsonc
 // req
@@ -55,15 +60,14 @@ Conventions: JSON in/out · `Content-Type: application/json` · errors return
 }
 ```
 
-### 📋 `POST /analyze/image`
+### ✅ `POST /analyze/image`
 
-`multipart/form-data` with `file` (screenshot), or JSON
-`{"image_b64": "...", "lang": "en"}`. Response mirrors `/analyze/text`.
+`multipart/form-data` with `file` (screenshot). OCR → text/URL classifiers.
 
-### 📋 `POST /analyze/voice`
+### ✅ `POST /analyze/voice`
 
 `multipart/form-data` with `file` (ogg/mp3/wav). Transcribes via Groq Whisper,
-then returns the `/analyze/text` shape.
+then returns a voice analysis verdict (+ synthetic score when Resemblyzer is available).
 
 ---
 
@@ -171,6 +175,10 @@ and `profile_id`.
     { "drill_number": 1, "score": 25, "scam_type": "bank_kyc", "date": "2026-10-10" }
   ] }
 ```
+
+### ✅ `GET /drill/history/{user_id}?limit=5`
+
+Recent drill results for the dashboard activity feed.
 
 ### ✅ `GET /drill/scam-types`
 
@@ -293,11 +301,17 @@ with deterministic template fallback.
 
 ---
 
+## Family hub (Phase 6)
+
+### ✅ `GET /family/status/{user_id}`
+
+Returns `{ linked, family_group_id, invite_code, member_count, handshake_ready, questions_count, has_totp, recent_alerts }`.
+Optional `?family_group_id=` overrides lookup. Also available as `GET /memory/family/status/{user_id}`.
+
 ## Bot intake (Phase 2)
 
-The bot calls `POST /analyze/text` and `POST /analyze/image` today; both return
-`501` until Phase 2 lands, so the bot replies with an acknowledgement stub
-(`bot/handlers/check.py`).
+The bot calls `POST /analyze`, `/analyze/text`, `/analyze/image`, `/analyze/voice`,
+and `/analyze/url` via `bot/utils/api.py` against a live backend (`MIRAGE_API_URL` or `BACKEND_URL`).
 
 ---
 

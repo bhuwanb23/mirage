@@ -4,8 +4,9 @@ Everything here is manual on purpose — no deploys run on commit.
 
 ## Order of operations
 
-Provision the data layer **first**. The backend boots without it (soft-init), but
-nothing downstream will work.
+Provision the data layer **first**. The backend soft-inits: missing keys log
+warnings and the app still boots (`GET /health` works). Features that need a
+provider degrade until you fill the secret.
 
 ### 1. Supabase
 
@@ -14,26 +15,26 @@ nothing downstream will work.
    Verifies: 6 tables, 4 enums, RLS policies, `updated_at` trigger.
 3. Project Settings → API → copy:
    - `Project URL` → `SUPABASE_URL`
-   - `anon public` key → `SUPABASE_ANON_KEY`
-   - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY` (server-side only, never in the frontend)
+   - `anon public` / publishable key → `SUPABASE_ANON_KEY` (or `SUPABASE_PUBLISHABLE_KEY` — both work)
 
 ### 2. Neo4j
 
 1. Create a free Aura instance at <https://neo4j.com/cloud/aura-free>.
 2. In Browser, paste `backend/db/002_neo4j_constraints.cypher` → Run.
    Verifies: 8 constraints + 1 fulltext index.
-3. Copy the bolt URI + password → `NEO4J_URI`, `NEO4J_PASSWORD`.
+3. Copy the bolt URI + password → `NEO4J_URI`, `NEO4J_PASSWORD`, `NEO4J_USERNAME`.
+
+Without Neo4j the scam graph uses an embedded SQLite store and auto-seeds a demo ring on boot.
 
 ### 3. LLM keys
 
 | Provider | Get it | Env var | Needed for |
 | --- | --- | --- | --- |
 | Groq | <https://console.groq.com> | `GROQ_API_KEY` | chat + Whisper transcription |
-| Gemini | <https://aistudio.google.com> | `GEMINI_API_KEY` | image/screenshot analysis |
-| Ollama | local (`ollama serve`) | none | free fallback, runs on your machine |
+| Gemini | <https://aistudio.google.com> | `GEMINI_API_KEY` | image/screenshot analysis + chat fallback |
+| Ollama | local (`ollama serve`) | none | free local fallback (not available on Render) |
 
 Order of preference is **Groq → Gemini → Ollama** (`LLM_PROVIDER=auto`).
-Groq's free tier is fast; set one key and most of Phase 2 works.
 
 ### 4. Local backend
 
@@ -45,6 +46,8 @@ uv run uvicorn app.main:app --port 8000
 ```
 
 Verify: `Invoke-WebRequest http://localhost:8000/health` → `200`.
+`providers.supabase` / `providers.neo4j` reflect **live client init**, not just env presence.
+`providers.graph_backend` is `neo4j` or `sqlite`.
 
 ### 5. Local frontend
 
@@ -55,13 +58,22 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Verify: <http://localhost:3000> — the Dashboard card shows a green `GET /health` probe.
+Verify: <http://localhost:3000> — Dashboard loads live score / weather / activity.
 
-### 6. Bot
+Optional demo audio fallbacks:
+
+```powershell
+cd backend
+uv run python scripts/generate_demo_audio.py
+```
+
+### 6. Bot (local — free tier)
+
+Workers are paid on Render. Run the bot locally against the local or Render API:
 
 ```powershell
 cd bot
-Copy-Item .env.example .env   # add TELEGRAM_BOT_TOKEN from @BotFather
+Copy-Item .env.example .env   # TELEGRAM_BOT_TOKEN + MIRAGE_API_URL (or BACKEND_URL)
 uv sync
 uv run python main.py
 ```
@@ -70,35 +82,31 @@ Verify: message the bot `/start` → welcome text.
 
 ### 7. Render
 
-`render.yaml` at the repo root is a blueprint with three services:
+`render.yaml` provisions **two free web services**:
 
 | Service | Type | Notes |
 | --- | --- | --- |
 | `mirage-api` | web (python) | `rootDir: backend`, health check `/health` |
-| `mirage-web` | static | `rootDir: frontend` — see caveat below |
-| `mirage-bot` | worker (python) | `rootDir: bot`, long-running polling |
+| `mirage-web` | web (node) | Next.js `npm run build && npm start` |
 
-In Render → New → Blueprint → point at the repo. Fill every `sync: false` env var
-in the dashboard. **Environment is `production`**, which makes the backend
-hard-fail on missing required keys — that is intended.
+In Render → New → Blueprint → point at the repo. Fill every `sync: false` env var.
+Minimum useful set: `GEMINI_API_KEY` or `GROQ_API_KEY`, plus Supabase/Neo4j if you want persistence.
 
-> **Static-site caveat:** `mirage-web` assumes an export step. Next.js 16 App
-> Router needs `output: "export"` in `frontend/next.config.ts` plus asset
-> rewrites for a true static build. If you'd rather keep server rendering,
-> switch that service to `runtime: node` with `npm run build && npm start`.
-> Both paths are untested — pick one and confirm before relying on it.
+`ENVIRONMENT` defaults to `development` so missing secrets do not crash boot.
+Set it to `production` in the dashboard once keys are filled (still soft-init — logs ERROR, does not exit).
 
 ## Never deploy
 
-- `SUPABASE_SERVICE_ROLE_KEY` to the frontend — it bypasses RLS.
+- Service-role Supabase keys to the frontend — they bypass RLS.
 - `.env` files — they're gitignored; Render stores secrets in its dashboard.
-- `TELEGRAM_BOT_TOKEN` anywhere except the bot worker.
+- `TELEGRAM_BOT_TOKEN` anywhere except the local bot process.
 
 ## Post-deploy smoke test
 
 ```powershell
-Invoke-WebRequest https://<your-api>/health
+Invoke-WebRequest https://mirage-api.onrender.com/health
+Invoke-WebRequest https://mirage-api.onrender.com/drill/scam-types
+Invoke-WebRequest https://mirage-api.onrender.com/graph/stats
 ```
 
-Expect `200` with `providers.supabase: true` and `providers.neo4j: true`.
-Any `false` means step 1 or 2 above is incomplete.
+Then open `https://mirage-web.onrender.com` and walk Dashboard → Drill → Guardian (sim) → Graph → Family.

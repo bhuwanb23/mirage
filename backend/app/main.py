@@ -34,17 +34,22 @@ async def lifespan(app: FastAPI):
     app.state.neo4j = init_neo4j()
 
     # Seed demo scam graph when empty so /graph is never blank on first boot.
-    try:
-        from app.services import scam_graph
-        from app.services.graph_seed import seed as seed_graph
+    # Skip under pytest so unit tests can assert an empty store.
+    import os
+    import sys
 
-        store = scam_graph.get_store()
-        stats = store.get_stats()
-        if (stats.phone_numbers or 0) == 0 and (stats.scam_reports or 0) == 0:
-            seed_graph(store)
-            logger.info("Seeded demo scam graph (empty store)")
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Graph seed skipped: %s", exc)
+    if "pytest" not in sys.modules and os.getenv("MIRAGE_SEED_GRAPH", "1") != "0":
+        try:
+            from app.services import scam_graph
+            from app.services.graph_seed import seed as seed_graph
+
+            store = scam_graph.get_store()
+            stats = store.get_stats()
+            if (stats.phone_numbers or 0) == 0 and (stats.scam_reports or 0) == 0:
+                seed_graph(store)
+                logger.info("Seeded demo scam graph (empty store)")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Graph seed skipped: %s", exc)
 
     logger.info("Mirage API started (env=%s, version=%s)", settings.environment, settings.version)
     yield
