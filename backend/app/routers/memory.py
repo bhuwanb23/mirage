@@ -60,10 +60,19 @@ def create_group(body: FamilyGroupCreate | None = None) -> FamilyGroupOut:
 @router.post("/group/join", response_model=FamilyGroupOut)
 def join_group(body: FamilyGroupJoin) -> FamilyGroupOut:
     try:
-        payload = service.join_group(body.invite_code)
+        payload = service.join_group(
+            body.invite_code,
+            user_id=str(body.user_id) if body.user_id else None,
+        )
     except service.MemoryError as exc:
         raise _http_error(exc) from exc
     return FamilyGroupOut(**payload)
+
+
+@router.get("/family/status/{user_id}")
+def family_status(user_id: str, family_group_id: str | None = None) -> dict:
+    """Dashboard + /family hub: group link, handshake readiness, alerts."""
+    return service.family_status(user_id, family_group_id=family_group_id)
 
 
 @router.post("/setup", response_model=MemorySetupResponse)

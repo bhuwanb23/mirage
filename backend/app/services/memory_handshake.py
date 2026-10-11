@@ -166,6 +166,20 @@ class MemoryStore:
     def set_totp_secret(self, group_id: str, secret: str) -> None:
         raise NotImplementedError
 
+    def find_group_for_user(self, user_id: str) -> Optional[dict]:
+        """Return the family group associated with a user, if any."""
+        raise NotImplementedError
+
+    def get_group(self, group_id: str) -> Optional[dict]:
+        raise NotImplementedError
+
+    def member_count(self, group_id: str) -> int:
+        return 1
+
+    def link_user(self, group_id: str, user_id: str) -> None:
+        """Associate a user with a group (join / create)."""
+        return None
+
 
 class InMemoryStore(MemoryStore):
     """Dev / no-Supabase fallback. Lives as long as the process."""
@@ -177,6 +191,8 @@ class InMemoryStore(MemoryStore):
         self._by_invite: dict[str, str] = {}
         self._questions: dict[str, list[dict]] = {}  # group_id -> rows
         self._secrets: dict[str, str] = {}           # group_id -> totp secret
+        self._user_groups: dict[str, str] = {}       # user_id -> group_id
+        self._members: dict[str, set[str]] = {}      # group_id -> user_ids
 
     def create_group(self, name: Optional[str] = None, created_by: Optional[str] = None) -> dict:
         group_id = str(uuid.uuid4())
@@ -190,6 +206,9 @@ class InMemoryStore(MemoryStore):
         }
         self._by_invite[invite] = group_id
         self._questions.setdefault(group_id, [])
+        self._members.setdefault(group_id, set())
+        if created_by:
+            self.link_user(group_id, str(created_by))
         return dict(self._groups[group_id])
 
     def find_group_by_invite(self, invite_code: str) -> Optional[dict]:
@@ -197,6 +216,28 @@ class InMemoryStore(MemoryStore):
         if group_id:
             return dict(self._groups[group_id])
         return None
+
+    def find_group_for_user(self, user_id: str) -> Optional[dict]:
+        group_id = self._user_groups.get(user_id)
+        if group_id and group_id in self._groups:
+            return dict(self._groups[group_id])
+        for g in self._groups.values():
+            if g.get("created_by") and str(g["created_by"]) == user_id:
+                return dict(g)
+        return None
+
+    def get_group(self, group_id: str) -> Optional[dict]:
+        g = self._groups.get(group_id)
+        return dict(g) if g else None
+
+    def member_count(self, group_id: str) -> int:
+        return max(1, len(self._members.get(group_id, set())))
+
+    def link_user(self, group_id: str, user_id: str) -> None:
+        if not user_id or group_id not in self._groups:
+            return
+        self._members.setdefault(group_id, set()).add(user_id)
+        self._user_groups[user_id] = group_id
 
     def save_questions(self, group_id: str, rows: list[dict]) -> None:
         if group_id not in self._groups:
@@ -305,6 +346,38 @@ class SupabaseStore(MemoryStore):
             "id", group_id
         ).execute()
 
+    def find_group_for_user(self, user_id: str) -> Optional[dict]:
+        try:
+            resp = (
+                self._sb.table("family_groups")
+                .select("*")
+                .eq("created_by", user_id)
+                .limit(1)
+                .execute()
+            )
+            rows = resp.data or []
+            return rows[0] if rows else None
+        except Exception:  # noqa: BLE001
+            return None
+
+    def get_group(self, group_id: str) -> Optional[dict]:
+        resp = (
+            self._sb.table("family_groups")
+            .select("*")
+            .eq("id", group_id)
+            .limit(1)
+            .execute()
+        )
+        rows = resp.data or []
+        return rows[0] if rows else None
+
+    def member_count(self, group_id: str) -> int:
+        # Schema has no members table — report at least the creator.
+        return 1 if self.get_group(group_id) else 0
+
+    def link_user(self, group_id: str, user_id: str) -> None:
+        return None
+
 
 # ---------------------------------------------------------------------------
 # Store selection (Supabase → in-memory fallback)
@@ -362,13 +435,57 @@ def create_group(name: Optional[str] = None, created_by: Optional[str] = None) -
     }
 
 
-def join_group(invite_code: str) -> dict:
-    group = get_store().find_group_by_invite(invite_code)
+def join_group(invite_code: str, user_id: Optional[str] = None) -> dict:
+    store = get_store()
+    group = store.find_group_by_invite(invite_code)
     if not group:
         raise NotFoundError("invalid invite code")
+    if user_id:
+        store.link_user(str(group["id"]), str(user_id))
     return {
         "family_group_id": str(group["id"]),
         "invite_code": group["invite_code"],
+    }
+
+
+def family_status(
+    user_id: str,
+    family_group_id: Optional[str] = None,
+) -> dict[str, Any]:
+    """Dashboard/family hub status for a user (or an explicit group id)."""
+    store = get_store()
+    group: Optional[dict] = None
+    if family_group_id:
+        group = store.get_group(family_group_id)
+    if group is None and user_id:
+        group = store.find_group_for_user(user_id)
+
+    if not group:
+        return {
+            "linked": False,
+            "family_group_id": None,
+            "invite_code": None,
+            "name": None,
+            "member_count": 0,
+            "handshake_ready": False,
+            "questions_count": 0,
+            "has_totp": False,
+            "recent_alerts": [],
+        }
+
+    gid = str(group["id"])
+    questions = store.list_questions(gid)
+    has_totp = bool(store.get_totp_secret(gid))
+    return {
+        "linked": True,
+        "family_group_id": gid,
+        "invite_code": group.get("invite_code"),
+        "name": group.get("name") or "Family",
+        "member_count": store.member_count(gid),
+        "handshake_ready": len(questions) >= MIN_QUESTIONS and has_totp,
+        "questions_count": len(questions),
+        "has_totp": has_totp,
+        "recent_alerts": [],
     }
 
 

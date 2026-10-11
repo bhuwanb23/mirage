@@ -116,6 +116,19 @@ def orchestrate(
 
     processing_ms = (time.perf_counter() - t0) * 1000
 
+    try:
+        from app.services import recent_activity
+
+        recent_activity.record_analyze(
+            is_scam=bool(getattr(verdict, "is_scam", False)),
+            scam_type=str(getattr(verdict, "scam_type", None) or "unknown"),
+            confidence=float(getattr(verdict, "confidence", 0.0) or 0.0),
+            input_type=detected_type,
+            summary=(getattr(verdict, "summary", None) or "")[:200],
+        )
+    except Exception:  # noqa: BLE001 — never fail analyze for telemetry
+        pass
+
     return AnalyzeResponse(
         verdict=verdict,
         analysis_metadata={

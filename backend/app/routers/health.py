@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from app.config import settings
 from app.models.schemas import HealthCheck
@@ -11,7 +11,12 @@ router = APIRouter(tags=["health"])
 
 
 @router.get("/health", response_model=HealthCheck)
-async def health() -> HealthCheck:
+async def health(request: Request) -> HealthCheck:
+    # Prefer live client init state over env-presence (avoids false positives).
+    supabase_ready = getattr(request.app.state, "supabase", None) is not None
+    neo4j_ready = getattr(request.app.state, "neo4j", None) is not None
+    graph_backend = "neo4j" if neo4j_ready else "sqlite"
+
     return HealthCheck(
         status="healthy",
         service=settings.service_name,
@@ -19,8 +24,9 @@ async def health() -> HealthCheck:
         providers={
             "configured": settings.primary_llm_provider,
             "available": settings.available_llm_providers,
-            "supabase": bool(settings.supabase_url),
-            "neo4j": bool(settings.neo4j_uri),
+            "supabase": supabase_ready,
+            "neo4j": neo4j_ready,
+            "graph_backend": graph_backend,
             "environment": settings.environment,
         },
     )
