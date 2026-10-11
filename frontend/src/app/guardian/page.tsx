@@ -24,6 +24,7 @@ import {
   type SummaryMessage,
   type VoiceUpdateMessage,
 } from "@/lib/guardian-ws";
+import { notify } from "@/lib/toast";
 
 const CHUNK_MS = 4000; // 4-second slices (plan §4.1)
 
@@ -134,6 +135,9 @@ export default function GuardianPage() {
     stageRef.current = msg;
     setStage(msg);
     setElapsed(msg.call_duration_seconds);
+    if (msg.alert_level === "critical") {
+      notify.warning(msg.message || "Critical scam stage detected");
+    }
     // Trigger the Memory Handshake once per call (plan §4.6).
     if (
       msg.alert_level === "warning" ||
@@ -166,6 +170,13 @@ export default function GuardianPage() {
 
   const handleError = useCallback((error: string) => {
     setSkippedNote(`Server: ${error}`);
+    notify.error(error);
+  }, []);
+
+  const handleStatus = useCallback((s: ConnectionStatus) => {
+    setStatus(s);
+    if (s === "reconnecting") notify.info("Guardian reconnecting…");
+    if (s === "error") notify.warning("Guardian connection error");
   }, []);
 
   // --- connection lifecycle --------------------------------------------
@@ -173,7 +184,7 @@ export default function GuardianPage() {
     (m: "audio" | "sim") => {
       const socket = new GuardianSocket(
         {
-          onStatus: setStatus,
+          onStatus: handleStatus,
           onReady: handleReady,
           onTranscription: handleTranscription,
           onTranscriptionSkipped: handleSkipped,
@@ -197,6 +208,7 @@ export default function GuardianPage() {
       handleVoice,
       handleSummary,
       handleError,
+      handleStatus,
     ],
   );
 

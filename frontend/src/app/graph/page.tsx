@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Globe, IndianRupee, Phone, Radar, Users, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ScamGraph from "@/components/hunter/ScamGraph";
 import ScamWeatherMap from "@/components/hunter/ScamWeatherMap";
 import HoneypotChat from "@/components/hunter/HoneypotChat";
@@ -65,7 +66,6 @@ export default function GraphPage() {
         surface the campaign behind them.
       </p>
 
-      {/* Live stats (fall back to zeros while loading / offline) */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Phones" value={stats?.phone_numbers ?? 0} icon={Phone} />
         <StatCard label="UPI IDs" value={stats?.upi_ids ?? 0} icon={IndianRupee} />
@@ -74,29 +74,36 @@ export default function GraphPage() {
         <StatCard label="Rings" value={stats?.rings ?? 0} icon={Users} />
       </div>
 
-      <div className="mt-6">
+      {/* Desktop: stacked sections. Mobile: tabs. */}
+      <div className="mt-6 hidden space-y-6 lg:block">
         <ScamGraph />
-      </div>
-
-      <div className="mt-6">
         <ScamWeatherMap />
-      </div>
-
-      <div className="mt-6">
         <HoneypotChat onSessionId={setHoneypotSessionId} />
-      </div>
-
-      <div className="mt-6">
         <ReportGenerator honeypotSessionId={honeypotSessionId} />
       </div>
 
-      <p className="mt-6 text-xs text-muted-foreground">
-        Graph ingestion runs plan §5.3 Cypher against Neo4j when{" "}
-        <code className="font-mono">NEO4J_URI</code> is configured, and falls
-        back to an embedded MERGE-semantics store for the demo. Seed the demo
-        ring with{" "}
-        <code className="font-mono">uv run python tests/seed_graph.py</code>.
-      </p>
+      <div className="mt-6 lg:hidden">
+        <Tabs defaultValue="graph">
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="graph">Graph</TabsTrigger>
+            <TabsTrigger value="map">Map</TabsTrigger>
+            <TabsTrigger value="honeypot">Honeypot</TabsTrigger>
+            <TabsTrigger value="report">Report</TabsTrigger>
+          </TabsList>
+          <TabsContent value="graph" className="mt-4">
+            <ScamGraph />
+          </TabsContent>
+          <TabsContent value="map" className="mt-4">
+            <ScamWeatherMap />
+          </TabsContent>
+          <TabsContent value="honeypot" className="mt-4">
+            <HoneypotChat onSessionId={setHoneypotSessionId} />
+          </TabsContent>
+          <TabsContent value="report" className="mt-4">
+            <ReportGenerator honeypotSessionId={honeypotSessionId} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

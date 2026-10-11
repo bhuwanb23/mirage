@@ -29,10 +29,18 @@ import {
   type ScamTypeInfo,
 } from "@/lib/drill-api";
 import { SCAM_TYPES } from "@/lib/constants";
+import { setDisplayName } from "@/lib/auth";
+import { notify } from "@/lib/toast";
 
-type Phase = "setup" | "briefing" | "run" | "debrief";
+type Phase = "setup" | "generating" | "briefing" | "run" | "debrief";
 
-const PHASES: Phase[] = ["setup", "briefing", "run", "debrief"];
+const PHASES: Phase[] = ["setup", "generating", "briefing", "run", "debrief"];
+
+const GEN_STEPS = [
+  "Building your exposure profile…",
+  "Writing a personalized scam script…",
+  "Synthesizing the call audio…",
+];
 
 function scamLabel(id: string): string {
   return (
@@ -54,6 +62,7 @@ export default function DrillPage() {
   const [scoring, setScoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formInitial, setFormInitial] = useState<Partial<DrillFormValues> | undefined>();
+  const [genStep, setGenStep] = useState(0);
 
   // load supported scam types (fallback list stands in if backend is down)
   useEffect(() => {
@@ -75,7 +84,10 @@ export default function DrillPage() {
     async (values: DrillFormValues) => {
       setBusy(true);
       setError(null);
+      setPhase("generating");
+      setGenStep(0);
       try {
+        setDisplayName(values.name);
         const prof = await drillApi.createProfile({
           name: values.name,
           city: values.city || undefined,
@@ -87,6 +99,7 @@ export default function DrillPage() {
           user_id: userId,
         });
         setProfile(prof);
+        setGenStep(1);
 
         if (values.voiceFile) {
           try {
@@ -104,6 +117,7 @@ export default function DrillPage() {
         });
         setScript(scr);
         setFormInitial(values);
+        setGenStep(2);
 
         // synthesize voice (edge-tts). On failure, try pre-generated demo
         // audio, then text-only drill. Never block the demo.
@@ -131,6 +145,8 @@ export default function DrillPage() {
             ? "Cannot reach the backend. Start it with: cd backend && uv run uvicorn app.main:app --port 8000"
             : message,
         );
+        setPhase("setup");
+        notify.error("Could not generate your drill");
       } finally {
         setBusy(false);
       }
@@ -157,10 +173,12 @@ export default function DrillPage() {
           setScore(null); // score card still shows per-drill numbers
         }
         setPhase("debrief");
+        notify.success(`Drill completed! Score: ${out.score_after}`);
       } catch (err) {
         setError(
           `Could not save the drill result: ${err instanceof Error ? err.message : String(err)}`,
         );
+        notify.error("Could not save drill result");
       } finally {
         setScoring(false);
       }
@@ -215,6 +233,32 @@ export default function DrillPage() {
           error={error}
           onSubmit={armDrill}
         />
+      )}
+
+      {phase === "generating" && (
+        <Card className="mt-6 border-border/60">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-emerald-400" aria-hidden />
+              Generating your personalized scam call…
+            </CardTitle>
+            <CardDescription>This usually takes a few seconds.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {GEN_STEPS.map((label, i) => (
+              <div
+                key={label}
+                className={`flex min-h-11 items-center gap-2 rounded-md border px-3 py-2 ${
+                  i <= genStep
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                    : "border-border/60 text-muted-foreground"
+                }`}
+              >
+                {i < genStep ? "✓" : i === genStep ? "…" : "○"} {label}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
 
       {phase === "briefing" && script && (
