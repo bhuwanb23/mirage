@@ -68,9 +68,12 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Explicit origins from CORS_ORIGINS + Render preview/suffix hosts
+    # (e.g. https://mirage-web-pvgo.onrender.com).
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list or ["*"],
+        allow_origin_regex=r"https://mirage-web(-[a-z0-9]+)?\.onrender\.com",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

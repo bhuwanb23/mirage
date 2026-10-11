@@ -1,14 +1,17 @@
 # Render blueprint — Mirage (free-tier only)
 # Docs: docs/deploy.md
-# Provisioning this file does NOT run the SQL/Cypher. Do that first (see docs/deploy.md).
 #
-# Free compute is only available for web services (and static sites).
-# Background workers require a paid plan — run the Telegram bot locally instead:
+# Free compute is only available for web services.
+# Background workers require a paid plan — run the Telegram bot locally:
 #   cd bot && uv sync && uv run python main.py
 #
-# Minimum secrets for a useful Render demo:
-#   GEMINI_API_KEY or GROQ_API_KEY, SUPABASE_URL + SUPABASE_ANON_KEY (optional),
-#   NEO4J_URI + NEO4J_PASSWORD (optional — SQLite graph fallback otherwise)
+# After first Blueprint create, Render may suffix hostnames
+# (e.g. mirage-api-nj77 / mirage-web-pvgo). Keep NEXT_PUBLIC_API_URL and
+# CORS_ORIGINS aligned with the live URLs in the dashboard if they differ.
+#
+# Minimum secrets for a useful demo on Render (Ollama is local-only):
+#   GEMINI_API_KEY or GROQ_API_KEY
+# Optional: SUPABASE_URL + SUPABASE_ANON_KEY, NEO4J_URI + NEO4J_PASSWORD
 
 services:
   - type: web
@@ -20,14 +23,12 @@ services:
     startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
-      # Soft-init: missing keys warn/log but do not crash boot.
-      # Flip to production in the dashboard once secrets are filled.
       - key: ENVIRONMENT
         value: development
       - key: OLLAMA_MODEL
         value: llama3.2:1b
       - key: CORS_ORIGINS
-        value: http://localhost:3000,https://mirage-web.onrender.com
+        value: http://localhost:3000,https://mirage-web.onrender.com,https://mirage-web-pvgo.onrender.com
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -52,4 +53,6 @@ services:
     startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://mirage-api.onrender.com
+        value: https://mirage-api-nj77.onrender.com
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://mirage-web-pvgo.onrender.com

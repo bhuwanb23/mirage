@@ -14,8 +14,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXT_PUBLIC_API_URL?.replace("mirage-api", "mirage-web") ||
+  "https://mirage-web-pvgo.onrender.com";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mirage-web.onrender.com"),
+  metadataBase: new URL(siteUrl),
   title: "Mirage — The Scam Vaccine",
   description:
     "Don't detect scams. Vaccinate people against them. Fire drills, a live call guardian, and a scammer honeypot.",

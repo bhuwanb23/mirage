@@ -92,8 +92,23 @@ Verify: message the bot `/start` → welcome text.
 In Render → New → Blueprint → point at the repo. Fill every `sync: false` env var.
 Minimum useful set: `GEMINI_API_KEY` or `GROQ_API_KEY`, plus Supabase/Neo4j if you want persistence.
 
+**Hostname suffixes:** Render often appends a random suffix
+(`mirage-api-nj77`, `mirage-web-pvgo`). After first deploy, set these in the
+dashboard (Environment) so the browser can talk to the API:
+
+| Service | Key | Example |
+| --- | --- | --- |
+| `mirage-api` | `CORS_ORIGINS` | `http://localhost:3000,https://mirage-web-pvgo.onrender.com` |
+| `mirage-web` | `NEXT_PUBLIC_API_URL` | `https://mirage-api-nj77.onrender.com` |
+| `mirage-web` | `NEXT_PUBLIC_SITE_URL` | `https://mirage-web-pvgo.onrender.com` |
+
+Then **Manual Deploy → Clear build cache & deploy** the web service so
+`NEXT_PUBLIC_*` is baked into the Next.js bundle.
+
 `ENVIRONMENT` defaults to `development` so missing secrets do not crash boot.
 Set it to `production` in the dashboard once keys are filled (still soft-init — logs ERROR, does not exit).
+
+Backend also allows any `https://mirage-web-*.onrender.com` origin via CORS regex.
 
 ## Never deploy
 

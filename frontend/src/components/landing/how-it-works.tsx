@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Flame, Network, Shield } from "lucide-react";
 
@@ -34,8 +34,16 @@ const STEPS = [
 
 export function HowItWorks() {
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const inView = useInView(ref, { once: true, amount: 0.2 });
+  const [mounted, setMounted] = useState(false);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setMounted(true), 400);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  const active = inView || mounted;
 
   return (
     <section ref={ref} className="border-y border-border/60 bg-card/20 py-16 md:py-20">
@@ -48,7 +56,7 @@ export function HowItWorks() {
               <motion.div
                 key={step.title}
                 initial={reduce ? false : { opacity: 0, x: -24 }}
-                animate={inView ? { opacity: 1, x: 0 } : undefined}
+                animate={active ? { opacity: 1, x: 0 } : undefined}
                 transition={{ delay: i * 0.15 }}
                 className="relative rounded-xl border border-border/60 bg-background/60 p-6 transition hover:-translate-y-1 hover:border-emerald-500/40"
               >

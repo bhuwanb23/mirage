@@ -52,8 +52,18 @@ function CountUp({
 
 export function ProblemStats() {
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, amount: 0.25 });
+  const [mounted, setMounted] = useState(false);
   const reduce = useReducedMotion();
+
+  // Fallback: if IntersectionObserver misses (SSR/crawlers/odd viewports),
+  // still animate shortly after mount so stats never stay at 0.
+  useEffect(() => {
+    const t = window.setTimeout(() => setMounted(true), 400);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  const active = inView || mounted;
 
   return (
     <section ref={ref} className="mx-auto max-w-6xl px-4 py-16 md:py-20">
@@ -63,7 +73,7 @@ export function ProblemStats() {
           <motion.div
             key={stat.label}
             initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={inView ? { opacity: 1, y: 0 } : undefined}
+            animate={active ? { opacity: 1, y: 0 } : undefined}
             transition={{ delay: i * 0.1 }}
             className="rounded-xl border border-border/60 bg-card/40 p-6"
           >
@@ -71,7 +81,7 @@ export function ProblemStats() {
               value={stat.value}
               prefix={stat.prefix}
               suffix={stat.suffix}
-              active={inView}
+              active={active}
             />
             <p className="mt-2 text-sm text-muted-foreground">{stat.label}</p>
           </motion.div>
