@@ -186,25 +186,7 @@ export const drillApi = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const USER_ID_KEY = "mirage_user_id";
-
-/** Stable per-browser user id, persisted so resilience history survives reloads. */
-export function getUserId(): string {
-  if (typeof window === "undefined") return "anonymous";
-  try {
-    let id = window.localStorage.getItem(USER_ID_KEY);
-    if (!id) {
-      id =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `uid-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-      window.localStorage.setItem(USER_ID_KEY, id);
-    }
-    return id;
-  } catch {
-    return "anonymous";
-  }
-}
+export { getUserId } from "./auth";
 
 /** Resolve a backend-relative media path (/media/drill/x.mp3) to an absolute URL. */
 export function mediaUrl(path: string | null | undefined): string | null {

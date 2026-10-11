@@ -8,7 +8,12 @@ export const NAV_LINKS = [
   { href: "/drill", label: "Fire Drills" },
   { href: "/guardian", label: "Guardian" },
   { href: "/graph", label: "Scam Map" },
+  { href: "/family", label: "Family" },
 ] as const;
+
+/** Public Telegram bot deep-link (override via NEXT_PUBLIC_TELEGRAM_BOT). */
+export const TELEGRAM_BOT_URL =
+  process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? "https://t.me/MirageScamBot";
 
 export const SCAM_TYPES = [
   { id: "bank_kyc", label: "Bank KYC / Update" },
