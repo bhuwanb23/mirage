@@ -136,7 +136,7 @@ export default function GuardianPage() {
     setStage(msg);
     setElapsed(msg.call_duration_seconds);
     if (msg.alert_level === "critical") {
-      notify.warning(msg.message || "Critical scam stage detected");
+      notify.warning(msg.alert_message || "Critical scam stage detected");
     }
     // Trigger the Memory Handshake once per call (plan §4.6).
     if (
@@ -176,7 +176,7 @@ export default function GuardianPage() {
   const handleStatus = useCallback((s: ConnectionStatus) => {
     setStatus(s);
     if (s === "reconnecting") notify.info("Guardian reconnecting…");
-    if (s === "error") notify.warning("Guardian connection error");
+    if (s === "closed") notify.warning("Guardian disconnected");
   }, []);
 
   // --- connection lifecycle --------------------------------------------

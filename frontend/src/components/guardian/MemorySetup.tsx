@@ -5,17 +5,18 @@ import { Copy, KeyRound, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
-
-const STORAGE_KEY = "mirage_family_group";
+import {
+  getFamilyGroupId,
+  getUserId,
+  setFamilyGroupId,
+} from "@/lib/auth";
 
 export function loadFamilyGroupId(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(STORAGE_KEY);
+  return getFamilyGroupId();
 }
 
 export function saveFamilyGroupId(groupId: string): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, groupId);
+  setFamilyGroupId(groupId);
 }
 
 interface QuestionDraft {
@@ -52,10 +53,7 @@ export function MemorySetup({
     setBusy(true);
     setError(null);
     try {
-      const res = await api.post<{ family_group_id: string; invite_code: string }>(
-        "/memory/group",
-        { name: "Family" },
-      );
+      const res = await api.createFamilyGroup("Family", getUserId());
       setGroupId(res.family_group_id);
       setInviteCode(res.invite_code);
       setStep("questions");
@@ -71,10 +69,7 @@ export function MemorySetup({
     setBusy(true);
     setError(null);
     try {
-      const res = await api.post<{ family_group_id: string; invite_code: string }>(
-        "/memory/group/join",
-        { invite_code: joinCode.trim() },
-      );
+      const res = await api.joinFamilyGroup(joinCode.trim(), getUserId());
       setGroupId(res.family_group_id);
       setInviteCode(res.invite_code);
       setStep("questions");
