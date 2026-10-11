@@ -33,6 +33,19 @@ async def lifespan(app: FastAPI):
     app.state.supabase = init_supabase()
     app.state.neo4j = init_neo4j()
 
+    # Seed demo scam graph when empty so /graph is never blank on first boot.
+    try:
+        from app.services import scam_graph
+        from app.services.graph_seed import seed as seed_graph
+
+        store = scam_graph.get_store()
+        stats = store.get_stats()
+        if (stats.phone_numbers or 0) == 0 and (stats.scam_reports or 0) == 0:
+            seed_graph(store)
+            logger.info("Seeded demo scam graph (empty store)")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Graph seed skipped: %s", exc)
+
     logger.info("Mirage API started (env=%s, version=%s)", settings.environment, settings.version)
     yield
 
@@ -96,10 +109,11 @@ def create_app() -> FastAPI:
     app.include_router(guardian.router)
 
     # Phase 5 — Scammer Hunter + Scam Graph
-    from app.routers import graph, honeypot
+    from app.routers import family, graph, honeypot
 
     app.include_router(honeypot.router)
     app.include_router(graph.router)
+    app.include_router(family.router, prefix="/family")
 
     return app
 

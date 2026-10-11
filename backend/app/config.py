@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger("mirage.config")
@@ -45,9 +45,26 @@ class Settings(BaseSettings):
 
     # ---- Databases ----
     supabase_url: str = ""
-    supabase_anon_key: str = ""
+    # Accept both legacy anon key and newer publishable key names.
+    supabase_anon_key: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "SUPABASE_ANON_KEY",
+            "SUPABASE_PUBLISHABLE_KEY",
+            "supabase_anon_key",
+            "supabase_publishable_key",
+        ),
+    )
     neo4j_uri: str = ""
-    neo4j_username: str = "neo4j"
+    neo4j_username: str = Field(
+        default="neo4j",
+        validation_alias=AliasChoices(
+            "NEO4J_USERNAME",
+            "NEO4J_USER",
+            "neo4j_username",
+            "neo4j_user",
+        ),
+    )
     neo4j_password: str = ""
 
     # ---- Runtime ----

@@ -232,6 +232,7 @@ class FamilyGroupCreate(BaseModel):
 
 class FamilyGroupJoin(BaseModel):
     invite_code: str
+    user_id: Optional[UUID] = None
 
 
 class FamilyGroupOut(BaseModel):

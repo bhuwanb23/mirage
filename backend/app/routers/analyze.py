@@ -32,6 +32,14 @@ from app.services.voice_analyzer import analyze_voice
 router = APIRouter(tags=["analyze"])
 
 
+@router.get("/recent")
+async def analyze_recent(limit: int = 5) -> dict:
+    """Recent analyze events for the dashboard activity feed."""
+    from app.services import recent_activity
+
+    return {"items": recent_activity.list_recent(limit=limit)}
+
+
 @router.post("")  # mounted at prefix=/analyze → POST /analyze
 async def analyze_orchestrator(
     text: Optional[str] = Form(None),
@@ -199,6 +207,18 @@ async def analyze_text_endpoint(
         raise HTTPException(status_code=503, detail=f"Analysis unavailable: {exc}") from exc
 
     processing_ms = (time.perf_counter() - t0) * 1000
+    try:
+        from app.services import recent_activity
+
+        recent_activity.record_analyze(
+            is_scam=bool(verdict.is_scam),
+            scam_type=str(verdict.scam_type or "unknown"),
+            confidence=float(verdict.confidence or 0.0),
+            input_type="text",
+            summary=(getattr(verdict, "summary", None) or "")[:200],
+        )
+    except Exception:  # noqa: BLE001
+        pass
     return AnalyzeResponse(
         verdict=verdict,
         analysis_metadata=_metadata(

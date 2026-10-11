@@ -404,6 +404,28 @@ def respond(req: DrillRespondRequest) -> DrillRespondOut:
 # 3.6 score
 # ---------------------------------------------------------------------------
 
+@router.get("/history/{user_id}")
+def get_history_endpoint(user_id: str, limit: int = 5) -> dict[str, Any]:
+    """Recent drill results for the dashboard activity feed."""
+    history = get_history(user_id)
+    items = list(reversed(history))[: max(0, min(limit, 50))]
+    return {
+        "user_id": user_id,
+        "items": [
+            {
+                "drill_id": r.get("drill_id") or r.get("id"),
+                "scam_type": r.get("scam_type", "unknown"),
+                "score_after": r.get("score_after", 0),
+                "score_change": r.get("score_change", 0),
+                "user_action": r.get("user_action"),
+                "reaction_time_seconds": r.get("reaction_time_seconds"),
+                "created_at": r.get("created_at"),
+            }
+            for r in items
+        ],
+    }
+
+
 @router.get("/score/{user_id}", response_model=DrillScoreOut)
 def get_score_endpoint(user_id: str) -> DrillScoreOut:
     history = get_history(user_id)
