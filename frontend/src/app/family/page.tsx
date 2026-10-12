@@ -48,7 +48,7 @@ export default function FamilyPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl space-y-4 px-4 py-8">
+      <div className="page-shell space-y-4">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-40 w-full" />
@@ -59,10 +59,13 @@ export default function FamilyPage() {
   const linked = Boolean(status?.linked && status.family_group_id);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Family Network</h1>
-        <p className="mt-1 text-muted-foreground">
+    <div className="page-shell space-y-8">
+      <header className="space-y-2">
+        <p className="text-sm font-medium uppercase tracking-widest text-emerald-400/90">
+          Memory handshake
+        </p>
+        <h1 className="page-title">Family Network</h1>
+        <p className="max-w-2xl text-muted-foreground">
           Shared secrets and a rotating family code that voice clones cannot guess.
         </p>
       </header>

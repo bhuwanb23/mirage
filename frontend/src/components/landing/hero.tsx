@@ -11,13 +11,17 @@ export function LandingHero() {
 
   return (
     <section className="relative overflow-hidden border-b border-border/60">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,oklch(0.22_0.06_162/0.35),transparent_55%)]"
+      />
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(30,64,175,0.25),transparent_65%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(52,211,153,0.12),transparent_68%)]"
         animate={reduce ? undefined : { scale: [1, 1.05, 1] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 py-20 text-center md:py-28">
+      <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 py-20 text-center md:py-32">
         <motion.div
           initial={reduce ? false : { opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -27,16 +31,24 @@ export function LandingHero() {
           <ShieldCheck className="h-12 w-12 text-emerald-400" aria-hidden />
         </motion.div>
 
+        <motion.p
+          className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-400/90"
+          initial={reduce ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          The scam vaccine
+        </motion.p>
         <motion.h1
-          className="max-w-3xl text-4xl font-bold tracking-tight md:text-5xl"
+          className="mt-4 max-w-3xl text-4xl font-bold tracking-tight md:text-6xl"
           initial={reduce ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          Mirage
+          <span className="text-gradient-brand">Mirage</span>
         </motion.h1>
         <motion.p
-          className="mt-3 max-w-2xl text-2xl font-semibold text-foreground/90 md:text-3xl"
+          className="mt-4 max-w-2xl text-xl font-semibold text-foreground/95 md:text-3xl"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
@@ -58,10 +70,10 @@ export function LandingHero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
         >
-          <Button size="lg" asChild className="min-h-11 px-5">
+          <Button size="lg" asChild className="min-h-11 px-6 shadow-lg shadow-emerald-900/30">
             <Link href="/drill">Start Your First Fire Drill</Link>
           </Button>
-          <Button size="lg" variant="outline" asChild className="min-h-11 px-5">
+          <Button size="lg" variant="outline" asChild className="min-h-11 border-border/80 bg-background/40 px-6 backdrop-blur-sm">
             <a href={TELEGRAM_BOT_URL} target="_blank" rel="noopener noreferrer">
               Try the Bot
             </a>

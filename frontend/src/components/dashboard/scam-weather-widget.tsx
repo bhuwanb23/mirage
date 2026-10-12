@@ -20,7 +20,7 @@ export function ScamWeatherWidget({
   const top = [...cities].sort((a, b) => b.scam_count - a.scam_count).slice(0, 3);
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/40 p-5">
+    <div className="glass-panel p-5 md:p-6">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-lg font-semibold">Scam Weather</h3>
         <Link

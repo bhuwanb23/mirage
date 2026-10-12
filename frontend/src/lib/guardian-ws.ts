@@ -103,7 +103,7 @@ export interface GuardianHandlers {
 }
 
 function guardianUrl(): string {
-  const base = API_URL.replace(/^http/, "ws");
+  const base = API_URL.replace(/^http/, "ws").replace(/\/+$/, "");
   return `${base}/guardian/stream`;
 }
 

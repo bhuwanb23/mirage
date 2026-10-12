@@ -47,14 +47,16 @@ export default function GraphPage() {
   }, [honeypotSessionId]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="page-shell space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Radar className="h-6 w-6 text-emerald-400" aria-hidden />
-          <h1 className="text-2xl font-bold tracking-tight">Scammer Hunter</h1>
-          <Badge variant="outline" className="font-mono text-[10px]">
-            Phase 5
-          </Badge>
+        <div className="space-y-1">
+          <p className="text-sm font-medium uppercase tracking-widest text-emerald-400/90">
+            Intelligence
+          </p>
+          <div className="flex items-center gap-3">
+            <Radar className="h-7 w-7 text-emerald-400" aria-hidden />
+            <h1 className="page-title text-3xl md:text-4xl">Scammer Hunter</h1>
+          </div>
         </div>
         <Badge variant="secondary" className="font-mono">
           graph backend: {stats?.backend ?? "…"}

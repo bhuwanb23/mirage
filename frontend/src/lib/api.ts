@@ -1,4 +1,10 @@
-import { API_URL } from "./constants";
+import { API_URL, normalizeApiBaseUrl } from "./constants";
+
+function apiUrl(path: string): string {
+  const base = normalizeApiBaseUrl(API_URL);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${normalizedPath}`;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -69,7 +75,7 @@ export interface FamilyStatus {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(apiUrl(path), {
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     cache: "no-store",

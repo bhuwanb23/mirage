@@ -36,11 +36,16 @@ export function Navbar() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <Shield className="h-5 w-5 text-emerald-400" aria-hidden />
-          <span>Mirage</span>
+    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 font-semibold tracking-tight transition-opacity hover:opacity-90"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30">
+            <Shield className="h-5 w-5 text-emerald-400" aria-hidden />
+          </span>
+          <span className="text-gradient-brand text-lg">Mirage</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
@@ -67,12 +72,15 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <Badge
             variant="secondary"
-            className="gap-1.5 font-mono"
+            className="hidden gap-1.5 border border-emerald-500/20 bg-emerald-500/10 font-mono text-emerald-100 sm:inline-flex"
             title="Resilience Score"
           >
             <Activity className="h-3 w-3 text-emerald-400" aria-hidden />
             Score {score ?? "—"}
           </Badge>
+          <Button size="sm" className="hidden md:inline-flex" asChild>
+            <Link href="/drill">Start drill</Link>
+          </Button>
           <Button
             type="button"
             variant="ghost"

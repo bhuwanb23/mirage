@@ -1,6 +1,12 @@
+/** Strip trailing slashes so `${API_URL}/path` never becomes `//path` (FastAPI 404). */
+export function normalizeApiBaseUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "");
+}
+
 /** API base URL. Overridable via NEXT_PUBLIC_API_URL (frontend/.env.local). */
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_URL = normalizeApiBaseUrl(
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000",
+);
 
 export const NAV_LINKS = [
   { href: "/", label: "Home" },

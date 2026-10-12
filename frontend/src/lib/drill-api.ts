@@ -1,5 +1,7 @@
-import { API_URL } from "./constants";
 import { ApiError, api } from "./api";
+import { API_URL, normalizeApiBaseUrl } from "./constants";
+
+const API_BASE = normalizeApiBaseUrl(API_URL);
 
 // ---------------------------------------------------------------------------
 // Types — mirror backend/app/models/schemas.py
@@ -151,7 +153,7 @@ export const drillApi = {
     const form = new FormData();
     form.append("profile_id", profileId);
     form.append("file", file);
-    const res = await fetch(`${API_URL}/drill/upload-voice`, {
+    const res = await fetch(`${API_BASE}/drill/upload-voice`, {
       method: "POST",
       body: form,
       cache: "no-store",
@@ -191,7 +193,7 @@ export { getUserId } from "./auth";
 /** Resolve a backend-relative media path (/media/drill/x.mp3) to an absolute URL. */
 export function mediaUrl(path: string | null | undefined): string | null {
   if (!path) return null;
-  return path.startsWith("http") ? path : `${API_URL}${path}`;
+  return path.startsWith("http") ? path : `${API_BASE}${path}`;
 }
 
 /** Bank short keys accepted by the backend (maps to full names server-side). */

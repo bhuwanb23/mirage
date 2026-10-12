@@ -106,10 +106,16 @@ export default function DashboardPage() {
   }, [load]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-muted-foreground">Welcome back, {name}</p>
+    <div className="page-shell space-y-8">
+      <header className="space-y-2">
+        <p className="text-sm font-medium uppercase tracking-widest text-emerald-400/90">
+          Your protection hub
+        </p>
+        <h1 className="page-title">Dashboard</h1>
+        <p className="max-w-xl text-muted-foreground">
+          Welcome back, <span className="font-medium text-foreground">{name}</span>.
+          Track drills, family safety, and live scam intelligence in one place.
+        </p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

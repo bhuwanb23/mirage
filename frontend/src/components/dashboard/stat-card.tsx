@@ -31,7 +31,7 @@ export function StatCard({
   onRetry,
 }: Props) {
   const body = (
-    <div className="relative rounded-xl border border-border/60 bg-card/40 p-5 transition hover:border-border">
+    <div className="glass-panel relative p-5 transition hover:border-emerald-500/25 hover:shadow-emerald-950/20">
       {icon ? (
         <div className="absolute right-4 top-4 text-muted-foreground/40" aria-hidden>
           {icon}

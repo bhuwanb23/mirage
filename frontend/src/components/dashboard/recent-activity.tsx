@@ -25,7 +25,7 @@ export function RecentActivity({
   loading?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card/40 p-5">
+    <div className="glass-panel p-5 md:p-6">
       <h3 className="text-lg font-semibold">Recent Activity</h3>
       {loading ? (
         <div className="mt-4 space-y-3">

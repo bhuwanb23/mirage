@@ -52,6 +52,7 @@ services:
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     envVars:
+      # No trailing slash — a trailing slash causes //path URLs and 404s from FastAPI.
       - key: NEXT_PUBLIC_API_URL
         value: https://mirage-api-nj77.onrender.com
       - key: NEXT_PUBLIC_SITE_URL
