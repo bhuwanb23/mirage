@@ -19,8 +19,13 @@ def record_analyze(
     confidence: float,
     input_type: str = "text",
     summary: str = "",
+    created_at: Optional[str] = None,
 ) -> None:
-    """Append a recent analyze event (oldest dropped when full)."""
+    """Append a recent analyze event (oldest dropped when full).
+
+    `created_at` is optional so the demo seeder can back-date events
+    (plan §7.3); normal callers get "now".
+    """
     event = {
         "type": "scam_detected" if is_scam else "analyze_safe",
         "scam_type": scam_type or "unknown",
@@ -30,7 +35,7 @@ def record_analyze(
         or (
             f"{'Scam' if is_scam else 'Safe'}: {scam_type or input_type}"
         ),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": created_at or datetime.now(timezone.utc).isoformat(),
     }
     with _lock:
         _events.appendleft(event)

@@ -41,15 +41,26 @@ async def lifespan(app: FastAPI):
     if "pytest" not in sys.modules and os.getenv("MIRAGE_SEED_GRAPH", "1") != "0":
         try:
             from app.services import scam_graph
-            from app.services.graph_seed import seed as seed_graph
+            from app.services.graph_seed import seed_full
 
             store = scam_graph.get_store()
             stats = store.get_stats()
-            if (stats.phone_numbers or 0) == 0 and (stats.scam_reports or 0) == 0:
-                seed_graph(store)
-                logger.info("Seeded demo scam graph (empty store)")
+            # seed_full is MERGE-idempotent: run on an empty store, or top up a
+            # store that only has the older, smaller 5.4 ring.
+            if (stats.phone_numbers or 0) < 15 or (stats.scam_reports or 0) < 12:
+                seed_full(store)
+                logger.info("Seeded demo scam graph (plan §7.3 dataset)")
         except Exception as exc:  # noqa: BLE001
             logger.warning("Graph seed skipped: %s", exc)
+
+        # In-process demo data (Priya profile, drill history, reports, family).
+        if os.getenv("MIRAGE_SEED_DEMO", "1") != "0":
+            try:
+                from app.services.demo_seed import seed_demo
+
+                seed_demo()
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Demo seed skipped: %s", exc)
 
     logger.info("Mirage API started (env=%s, version=%s)", settings.environment, settings.version)
     yield

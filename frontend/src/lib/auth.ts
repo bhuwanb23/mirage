@@ -1,5 +1,11 @@
-/** Lightweight client identity — UUID persisted in localStorage. */
+/** Lightweight client identity — UUID persisted in localStorage.
+ *
+ * Demo mode (plan §7.3): when NEXT_PUBLIC_DEMO_USER_ID is set, the app uses
+ * that stable id instead of a random one, so the dashboard shows the seeded
+ * Priya Sharma profile, drill history (25 → 42 → 67), and family group.
+ */
 
+const DEMO_USER_ID = process.env.NEXT_PUBLIC_DEMO_USER_ID || "";
 const USER_KEY = "mirage_user_id";
 const FAMILY_KEY = "mirage_family_group_id";
 const NAME_KEY = "mirage_display_name";
@@ -12,6 +18,7 @@ function uuid(): string {
 }
 
 export function getUserId(): string {
+  if (DEMO_USER_ID) return DEMO_USER_ID;
   if (typeof window === "undefined") return "anonymous";
   let id = localStorage.getItem(USER_KEY);
   if (!id) {
@@ -22,6 +29,7 @@ export function getUserId(): string {
 }
 
 export function getDisplayName(): string {
+  if (DEMO_USER_ID) return localStorage.getItem(NAME_KEY) || "Priya";
   if (typeof window === "undefined") return "friend";
   return localStorage.getItem(NAME_KEY) || "friend";
 }

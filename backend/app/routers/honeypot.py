@@ -250,13 +250,56 @@ SCRIPTED_DEMO = [
         ),
         "tactic": "compliance",
     },
+    {
+        "role": "scammer",
+        "text": (
+            "₹2 lakh! Good. Transfer to UPI sbi-safe@ybl OR to bank account "
+            "1234567890123, IFSC SBIN0001234, account holder R Kumar. Fast!"
+        ),
+    },
+    {
+        "role": "ramesh",
+        "text": (
+            "R Kumar... I am writing. 1-2-3-4-5-6-7-8-9-0-1-2-3? And I-F-S-C "
+            "S-B-I-N zero-zero-one-two-three-four. Beta, my grandson usually "
+            "does these things. Can you WhatsApp the screenshot to me? My number "
+            "is 7654321098. Actually no, that is the AC repairman. Sorry!"
+        ),
+        "tactic": "mishearing",
+    },
+    {
+        "role": "scammer",
+        "text": (
+            "Fine!! One last chance. Account 1234567890123 OR UPI sbi-safe@ybl. "
+            "Send ₹10,000 first as a TEST transfer. Only ₹10,000!"
+        ),
+    },
+    {
+        "role": "ramesh",
+        "text": (
+            "Ten thousand, okay okay. But beta, one question — my pension comes "
+            "on the 1st. Will the blocked happen before the 1st or after? My "
+            "medicine bill is also due. Also is this the same account you gave "
+            "last week when you were the HDFC officer? You sound similar."
+        ),
+        "tactic": "identity_confusion",
+    },
+    {
+        "role": "scammer",
+        "text": (
+            "I am DONE with you! Keep your pension. Enjoy being poor!"
+        ),
+    },
 ]
 
 SCRIPTED_IOC_HIGHLIGHTS = {
     "sbi-safe@ybl": "UPI ID",
     "9876543211": "Phone",
     "8765432109": "Phone",
+    "7654321098": "Phone",
     "sbi-kyc-verify.xyz": "Domain",
+    "1234567890123": "Bank account",
+    "SBIN0001234": "IFSC",
 }
 
 
