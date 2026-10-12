@@ -18,6 +18,7 @@ Run:  uv run pytest tests/test_memory_handshake.py -q
 from __future__ import annotations
 
 import hashlib
+import hmac
 import logging
 import random
 import re
@@ -75,10 +76,19 @@ def normalize_answer(answer: str) -> str:
 
 
 def hash_answer(answer: str) -> str:
-    """SHA-256 of the normalized answer, peppered when configured."""
+    """HMAC-SHA-256 of the normalized answer, keyed by MEMORY_HASH_PEPPER.
+
+    Unkeyed hashing is still better than plaintext storage, but a real
+    pepper turns the stored value into a server-verifiable MAC instead of a
+    generic checksum that anyone with the DB can replay.
+    """
     normalized = normalize_answer(answer)
-    payload = f"{settings.memory_hash_pepper}{normalized}".encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
+    key = settings.memory_hash_pepper.encode("utf-8") if settings.memory_hash_pepper else b""
+    if not settings.memory_hash_pepper:
+        logger.warning(
+            "MEMORY_HASH_PEPPER not set — memory handshake uses unkeyed hash"
+        )
+    return hmac.new(key, normalized.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 # ---------------------------------------------------------------------------

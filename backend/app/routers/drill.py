@@ -140,6 +140,11 @@ async def upload_voice(
             detail=f"Unsupported format {suffix}. Use .wav, .mp3, .m4a, or .ogg.",
         )
     data = await file.read()
+    if file.content_type and not file.content_type.startswith("audio/"):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported media type {file.content_type}; expected audio/*",
+        )
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=422, detail="Voice clip too large (max 5 MB).")
 

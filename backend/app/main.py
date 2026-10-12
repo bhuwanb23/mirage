@@ -26,6 +26,12 @@ logger = logging.getLogger("mirage.api")
 async def lifespan(app: FastAPI):
     settings.validate_startup()
 
+    # Tighten CORS for production: a wildcard in production is a real exposure.
+    if settings.is_production and (
+        not settings.cors_origin_list or settings.cors_origin_list == ["*"]
+    ):
+        raise RuntimeError("CORS_ORIGINS must be set in production")
+
     # Soft-init external clients: log failures, never block boot in development.
     from app.clients.neo4j_client import init_neo4j
     from app.clients.supabase_client import init_supabase
@@ -60,6 +66,32 @@ async def lifespan(app: FastAPI):
     logger.info("Mirage API shut down")
 
 
+def _cache_control_for_path(path: str) -> str:
+    """Cache-Control that protects live / sensitive browser endpoints."""
+    sensitive_prefixes = (
+        "/graph/data",
+        "/graph/stats",
+        "/graph/rings",
+        "/map/heatmap",
+        "/memory/totp",
+        "/memory/questions",
+        "/guardian/stream",
+    )
+    if any(path.startswith(p) for p in sensitive_prefixes):
+        return "no-store, no-cache, must-revalidate, private"
+    return "no-store"
+
+
+def _strip_server_headers(response) -> None:
+    """Drop default FastAPI/Starlette server fingerprinting headers."""
+    # Starlette's MutableHeaders doesn't have pop(); use __delitem__ with try/except.
+    for header in ("server", "x-powered-by"):
+        try:
+            del response.headers[header]
+        except (KeyError, TypeError):
+            pass
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Mirage API",
@@ -70,14 +102,37 @@ def create_app() -> FastAPI:
 
     # Explicit origins from CORS_ORIGINS + Render preview/suffix hosts
     # (e.g. https://mirage-web-pvgo.onrender.com).
+    #
+    # In production the lifespan guard above already rejects an empty/wildcard
+    # CORS_ORIGINS, so cors_origin_list is a real allowlist here.
+    allow_origins = settings.cors_origin_list or (
+        ["http://localhost:3000"] if not settings.is_production else []
+    )
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origin_list or ["*"],
+        allow_origins=allow_origins,
         allow_origin_regex=r"https://mirage-web(-[a-z0-9]+)?\.onrender\.com",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next):
+        """Add hardened security headers to every response.
+
+        Registered before request_logging so its headers land first and are not
+        accidentally clobbered by later middleware.
+        """
+        response = await call_next(request)
+        response.headers["x-content-type-options"] = "nosniff"
+        response.headers["x-frame-options"] = "sameorigin"
+        response.headers["referrer-policy"] = "strict-origin-when-cross-origin"
+        response.headers["permissions-policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["cache-control"] = _cache_control_for_path(request.url.path)
+        _strip_server_headers(response)
+        return response
 
     @app.middleware("http")
     async def request_logging(request: Request, call_next):

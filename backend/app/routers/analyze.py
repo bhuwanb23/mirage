@@ -32,6 +32,58 @@ from app.services.voice_analyzer import analyze_voice
 router = APIRouter(tags=["analyze"])
 
 
+def _safe_dump(obj: object) -> dict:
+    """Serialize a Pydantic model/dict/object to a plain dict.
+
+    The recursive cleaning step strips out any values that look like
+    internal exception details (Exception instances, or strings
+    containing "traceback") so error-ish payloads never leak internals.
+    """
+    return _clean(_to_dict(obj))
+
+
+def _to_dict(obj: object) -> dict:
+    if hasattr(obj, "model_dump"):
+        payload = obj.model_dump()
+        if "evidence" in payload and isinstance(payload["evidence"], list):
+            payload["evidence"] = [_to_dict(ev) for ev in payload["evidence"]]
+        return payload
+    if isinstance(obj, dict):
+        return {k: _to_dict(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_dict(item) for item in obj]
+    return {k: getattr(obj, k) for k in dir(obj) if not k.startswith("_")}
+
+
+def _clean(obj: object) -> object:
+    """Recursively scrub internal-error leakage from a serialized payload."""
+    if isinstance(obj, dict):
+        return {k: _clean(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_clean(item) for item in obj]
+    if isinstance(obj, BaseException):
+        return "<omitted>"
+    if isinstance(obj, str) and "traceback" in obj.lower():
+        return "<omitted>"
+    return obj
+
+
+def _serialize_response(response: AnalyzeResponse) -> dict:
+    return _safe_dump(response)
+
+
+def _serialize_image_result(result: ImageAnalysisVerdict) -> dict:
+    return _safe_dump(result)
+
+
+def _serialize_voice_result(result: VoiceAnalysisVerdict) -> dict:
+    return _safe_dump(result)
+
+
+def _serialize_url_output(output: URLAnalysisOutput) -> dict:
+    return _safe_dump(output)
+
+
 @router.get("/recent")
 async def analyze_recent(limit: int = 5) -> dict:
     """Recent analyze events for the dashboard activity feed."""
@@ -104,15 +156,6 @@ def _metadata(
         "language_detected": language,
         "provider_used": provider_used,
     }
-
-
-def _dict_or_model_dump(obj: Any) -> dict:
-    """Convert a Pydantic model or dict to a plain dict."""
-    if hasattr(obj, 'model_dump'):
-        return obj.model_dump()
-    if isinstance(obj, dict):
-        return obj
-    return {k: getattr(obj, k) for k in dir(obj) if not k.startswith('_')}
 
 
 def _serialize_response(response: AnalyzeResponse) -> dict:

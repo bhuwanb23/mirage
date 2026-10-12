@@ -234,6 +234,41 @@ def sanitize_reply(reply: str) -> str:
     return reply
 
 
+def _sanitize_agent_obj(data: dict) -> dict:
+    """Drop any LLM-returned fields whose shape is wrong for our contract.
+
+    The honeypot agent is an untrusted caller of our own code: a poisoned
+    JSON reply should never land unsanitized into the turn pipeline.
+    """
+    if not isinstance(data, dict):
+        return {}
+    sanitized: dict[str, object] = {}
+    for key, value in data.items():
+        if key == "reply":
+            if not isinstance(value, str):
+                continue
+            sanitized[key] = value
+        elif key == "iocs_extracted_this_turn":
+            if not isinstance(value, dict):
+                continue
+            sanitized[key] = value
+        elif key == "conversation_health":
+            if not isinstance(value, str):
+                continue
+            sanitized[key] = value
+        elif key == "estimated_time_wasted_seconds":
+            if not isinstance(value, (int, float)):
+                continue
+            sanitized[key] = value
+        elif key in {"tactic_used"}:
+            if not isinstance(value, str):
+                continue
+            sanitized[key] = value
+        else:
+            sanitized[key] = value
+    return sanitized
+
+
 def parse_agent_json(raw: str) -> dict:
     """Parse the agent's JSON output robustly (fences, chatter, truncation)."""
     if not raw:
@@ -241,15 +276,19 @@ def parse_agent_json(raw: str) -> dict:
     text = raw.strip()
     text = re.sub(r"^```(?:json)?|```$", "", text, flags=re.MULTILINE).strip()
     try:
-        return json.loads(text)
+        parsed = json.loads(text)
     except json.JSONDecodeError:
         pass
+    else:
+        return _sanitize_agent_obj(parsed)
     start, end = text.find("{"), text.rfind("}")
     if start != -1 and end > start:
         try:
-            return json.loads(text[start : end + 1])
+            parsed = json.loads(text[start : end + 1])
         except json.JSONDecodeError:
             logger.warning("honeypot agent returned unparseable JSON")
+        else:
+            return _sanitize_agent_obj(parsed)
     return {}
 
 
