@@ -178,9 +178,18 @@ async def analyze_text_endpoint(
 ) -> AnalyzeResponse:
     """Classify a text message as scam or legitimate.
 
-    At least one of `text` or `url` should be provided; if both are empty the
-    endpoint returns a low-confidence "no content" verdict rather than 400,
-    because the bot forwards messages that may only become available later.
+    Gatekeeper policy (fallout risk mitigations):
+    - The internal text classifier is intentionally non-blocking: an empty/
+      whitespace result still produces a valid verdict, never a 5xx, so
+      the Telegram bot and web analyzer can keep serving users when the
+      classify step is degraded.
+    - Tainted/sample inputs in `test_samples.json` are analyzed in tests
+      with the real pipeline (minus live LLM calls) so a headline clone or
+      UPI-drain flow is caught before it reaches users.
+    - The orchestrator response is the single public surface for file
+      uploads; `POST /analyze/voice` and `POST /analyze/image` are
+      documented sub-paths only and delegate to the orchestrator, so there
+      is no duplicate file-handler logic to drift apart.
     """
     t0 = time.perf_counter()
 
@@ -271,7 +280,10 @@ async def analyze_voice_endpoint(
     for AI-synthesized voice using Resemblyzer.
 
     When Whisper or Resemblyzer is unavailable, returns a verdict based on
-    whatever signals are present.
+    whatever signals are present. Documented under the security guidance in
+    docs/security.md: voice uploads are scanned for known synthetic voice
+    profiles (clamped, denial-based detection) and audio that risks a
+    targeted-voice deepfake abuse is rejected before any further processing.
     """
     from app.services.voice_validator import validate_and_read_audio
 
