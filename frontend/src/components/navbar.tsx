@@ -31,9 +31,10 @@ export function Navbar() {
     };
   }, [pathname]);
 
+  // Collapse the nav panel whenever the route changes — die setup.
   useEffect(() => {
     setOpen(false);
-  }, [pathname]);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">

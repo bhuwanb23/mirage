@@ -9,10 +9,10 @@ export function TotpCard({ familyGroupId }: { familyGroupId: string }) {
   const [expires, setExpires] = useState(0);
   const [intervalSec, setIntervalSec] = useState(300);
   const [loading, setLoading] = useState(true);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    let timer: ReturnType<typeof setInterval> | undefined;
 
     const refresh = async () => {
       try {
@@ -28,7 +28,7 @@ export function TotpCard({ familyGroupId }: { familyGroupId: string }) {
     };
 
     void refresh();
-    timer = setInterval(() => {
+    timer.current = setInterval<typeof setInterval>(() => {
       setExpires((s) => {
         if (s <= 1) {
           void refresh();
@@ -36,11 +36,11 @@ export function TotpCard({ familyGroupId }: { familyGroupId: string }) {
         }
         return s - 1;
       });
-    }, 1000);
+    }, 1000) as ReturnType<typeof setInterval>;
 
     return () => {
       cancelled = true;
-      if (timer) clearInterval(timer);
+      if (timer.current) clearInterval(timer.current);
     };
   }, [familyGroupId]);
 

@@ -26,6 +26,7 @@ function CountUp({
   useEffect(() => {
     if (!active) return;
     if (reduce) {
+      // Animate-less path: jump straight to the target.
       setN(value);
       return;
     }
@@ -39,7 +40,8 @@ function CountUp({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [active, value, reduce]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- value read inside rAF body; fine for this effect
+  }, [active, value]);
 
   return (
     <span className="font-mono text-4xl font-bold text-red-400">

@@ -101,9 +101,11 @@ export default function DashboardPage() {
     setLoading(false);
   }, []);
 
+  // Initial data load. `load` is stable (empty deps), so this runs once.
   useEffect(() => {
     void load();
-  }, [load]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot dashboard prefetch on mount
+  }, []);
 
   return (
     <div className="page-shell space-y-8">
