@@ -54,3 +54,20 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+
+# Dependency-install safety policy.
+#
+# - Do not run `uv sync` / `uv pip install` with lifecycle scripts enabled in
+#   untrusted or automated CI until the dependency set has been reviewed.
+# - The first install in a fresh environment should be performed with scripts
+#   disabled (or under an equivalent documented fail-closed policy), the pending
+#   install scripts inspected, and only the minimum approved.
+# - The authoritative lockfile for the backend is `uv.lock`. Keep it committed;
+#   do not hand-edit it. Releases must be built from the frozen lockfile, not a
+#   freshly resolved graph.
+# - Before every release, run the native audit against the committed lockfile and
+#   triage critical/high findings by reachability (runtime / build / test /
+#   deploy paths). Never auto-apply `uv sync --upgrade` / `uv pip install --upgrade`
+#   forced remediation; preview, read the changelog, and test each upgrade.
+# - Add new dependencies sparingly. For each new dependency, record ownership,
+#   maintenance status, release age, and transitive impact in the PR that adds it.

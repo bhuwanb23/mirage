@@ -44,7 +44,8 @@ export default function FamilyPage() {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot family page prefetch on mount
+  }, []);
 
   if (loading) {
     return (
